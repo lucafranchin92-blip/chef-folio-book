@@ -26,6 +26,7 @@ const getLocationScore = (chefLocation: string, userLocation: string): number =>
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCuisine, setSelectedCuisine] = useState<string | null>(null);
+  const [selectedCity, setSelectedCity] = useState<string | null>(null);
   const { userLocation } = useLocation();
 
   const filteredChefs = useMemo(() => {
@@ -33,17 +34,19 @@ const Index = () => {
       const matchesSearch =
         chef.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         chef.specialty.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        chef.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
         chef.cuisines.some((c) => c.toLowerCase().includes(searchQuery.toLowerCase()));
 
       const matchesCuisine =
         !selectedCuisine || chef.cuisines.includes(selectedCuisine);
 
-      return matchesSearch && matchesCuisine;
+      const matchesCity =
+        !selectedCity || chef.location === selectedCity;
+
+      return matchesSearch && matchesCuisine && matchesCity;
     });
 
     // Sort by location proximity if user has set location
-    if (userLocation) {
+    if (userLocation && !selectedCity) {
       return filtered.sort((a, b) => {
         const scoreA = getLocationScore(a.location, userLocation);
         const scoreB = getLocationScore(b.location, userLocation);
@@ -52,7 +55,7 @@ const Index = () => {
     }
 
     return filtered;
-  }, [searchQuery, selectedCuisine, userLocation]);
+  }, [searchQuery, selectedCuisine, selectedCity, userLocation]);
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
@@ -79,6 +82,8 @@ const Index = () => {
             onSearchChange={setSearchQuery}
             selectedCuisine={selectedCuisine}
             onCuisineChange={setSelectedCuisine}
+            selectedCity={selectedCity}
+            onCityChange={setSelectedCity}
           />
         </div>
 
