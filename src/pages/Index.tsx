@@ -5,13 +5,31 @@ import ChefCard from "@/components/ChefCard";
 import SearchFilters from "@/components/SearchFilters";
 import { chefs } from "@/data/chefs";
 import { ChefHat } from "lucide-react";
+import { useLocation } from "@/contexts/LocationContext";
+
+// Simple location matching - checks if locations share city/state keywords
+const getLocationScore = (chefLocation: string, userLocation: string): number => {
+  if (!userLocation) return 0;
+  
+  const chefParts = chefLocation.toLowerCase().split(/[,\s]+/).filter(Boolean);
+  const userParts = userLocation.toLowerCase().split(/[,\s]+/).filter(Boolean);
+  
+  let score = 0;
+  for (const userPart of userParts) {
+    if (chefParts.some(part => part.includes(userPart) || userPart.includes(part))) {
+      score += 1;
+    }
+  }
+  return score;
+};
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCuisine, setSelectedCuisine] = useState<string | null>(null);
+  const { userLocation } = useLocation();
 
   const filteredChefs = useMemo(() => {
-    return chefs.filter((chef) => {
+    const filtered = chefs.filter((chef) => {
       const matchesSearch =
         chef.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         chef.specialty.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -23,7 +41,18 @@ const Index = () => {
 
       return matchesSearch && matchesCuisine;
     });
-  }, [searchQuery, selectedCuisine]);
+
+    // Sort by location proximity if user has set location
+    if (userLocation) {
+      return filtered.sort((a, b) => {
+        const scoreA = getLocationScore(a.location, userLocation);
+        const scoreB = getLocationScore(b.location, userLocation);
+        return scoreB - scoreA; // Higher score = closer match
+      });
+    }
+
+    return filtered;
+  }, [searchQuery, selectedCuisine, userLocation]);
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">

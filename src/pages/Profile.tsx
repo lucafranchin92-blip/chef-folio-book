@@ -1,12 +1,12 @@
-import { useState } from "react";
 import { User, Settings, HelpCircle } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
 import LocationSettings from "@/components/LocationSettings";
+import { useLocation } from "@/contexts/LocationContext";
 
 const Profile = () => {
-  const [userLocation, setUserLocation] = useState("");
+  const { userLocation, setUserLocation } = useLocation();
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
