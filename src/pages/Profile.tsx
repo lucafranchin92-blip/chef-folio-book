@@ -1,15 +1,27 @@
-import { User, Settings, HelpCircle, LogOut } from "lucide-react";
+import { useState } from "react";
+import { User, Settings, HelpCircle } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
+import LocationSettings from "@/components/LocationSettings";
 
 const Profile = () => {
+  const [userLocation, setUserLocation] = useState("");
+
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
       <Navbar />
 
       <main className="container mx-auto px-4 py-6">
         <h1 className="text-2xl font-serif mb-6">Profile</h1>
+
+        {/* Location Settings */}
+        <div className="mb-8">
+          <LocationSettings
+            location={userLocation}
+            onLocationChange={setUserLocation}
+          />
+        </div>
 
         {/* Guest State */}
         <div className="text-center py-12 mb-8">
