@@ -2,12 +2,24 @@ import { Link } from "react-router-dom";
 import { Star, MapPin, Clock } from "lucide-react";
 import { Badge } from "./ui/badge";
 import { Chef } from "@/types/chef";
+import { useLocation } from "@/contexts/LocationContext";
 
 interface ChefCardProps {
   chef: Chef;
 }
 
+const isNearby = (chefLocation: string, userLocation: string): boolean => {
+  if (!userLocation) return false;
+  const chefParts = chefLocation.toLowerCase().split(/[,\s]+/).filter(Boolean);
+  const userParts = userLocation.toLowerCase().split(/[,\s]+/).filter(Boolean);
+  return userParts.some(part => 
+    chefParts.some(chefPart => chefPart.includes(part) || part.includes(chefPart))
+  );
+};
+
 const ChefCard = ({ chef }: ChefCardProps) => {
+  const { userLocation } = useLocation();
+  const nearby = isNearby(chef.location, userLocation);
   return (
     <Link to={`/chef/${chef.id}`} className="block group">
       <div className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/50 transition-all duration-300 hover:shadow-lg">
@@ -23,7 +35,12 @@ const ChefCard = ({ chef }: ChefCardProps) => {
               <span className="text-muted-foreground font-sans text-sm">Currently Unavailable</span>
             </div>
           )}
-          <div className="absolute top-3 right-3">
+          <div className="absolute top-3 right-3 flex gap-2">
+            {nearby && (
+              <Badge className="bg-green-600 text-white">
+                Near you
+              </Badge>
+            )}
             <Badge variant="secondary" className="bg-background/90 backdrop-blur-sm">
               {chef.priceRange}
             </Badge>
