@@ -2,10 +2,12 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "./ui/button";
 import { Menu, X, ChefHat, User, ShoppingCart } from "lucide-react";
+import { useCart } from "@/contexts/CartContext";
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const { totalItems } = useCart();
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -43,6 +45,11 @@ const Navbar = () => {
               className="relative text-muted-foreground hover:text-foreground transition-colors"
             >
               <ShoppingCart className="w-5 h-5" />
+              {totalItems > 0 && (
+                <span className="absolute -top-2 -right-2 w-5 h-5 bg-primary text-primary-foreground text-xs font-sans font-medium rounded-full flex items-center justify-center">
+                  {totalItems > 9 ? "9+" : totalItems}
+                </span>
+              )}
             </Link>
             <Button variant="gold" size="sm">
               <User className="w-4 h-4 mr-1" />
