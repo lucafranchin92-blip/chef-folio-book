@@ -1,4 +1,5 @@
-import { User, Settings, HelpCircle } from "lucide-react";
+import { User, Settings, HelpCircle, ShoppingCart } from "lucide-react";
+import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,10 @@ const Profile = () => {
 
         {/* Menu Items */}
         <div className="space-y-2">
+          <Link to="/cart" className="w-full flex items-center gap-4 p-4 bg-card border border-border rounded-lg hover:border-primary/50 transition-colors text-left">
+            <ShoppingCart className="w-5 h-5 text-muted-foreground" />
+            <span className="font-sans">My Cart</span>
+          </Link>
           <button className="w-full flex items-center gap-4 p-4 bg-card border border-border rounded-lg hover:border-primary/50 transition-colors text-left">
             <Settings className="w-5 h-5 text-muted-foreground" />
             <span className="font-sans">Settings</span>
