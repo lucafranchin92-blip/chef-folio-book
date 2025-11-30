@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "./ui/button";
-import { Menu, X, ChefHat, User } from "lucide-react";
+import { Menu, X, ChefHat, User, ShoppingCart } from "lucide-react";
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -37,6 +37,12 @@ const Navbar = () => {
               }`}
             >
               My Reservations
+            </Link>
+            <Link
+              to="/cart"
+              className="relative text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ShoppingCart className="w-5 h-5" />
             </Link>
             <Button variant="gold" size="sm">
               <User className="w-4 h-4 mr-1" />
