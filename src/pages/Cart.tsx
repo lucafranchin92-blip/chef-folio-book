@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { ShoppingCart, ChefHat, Trash2, Plus, Minus } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
+import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
 
@@ -97,6 +98,7 @@ const Cart = () => {
         )}
       </main>
 
+      <Footer />
       <BottomNav />
     </div>
   );

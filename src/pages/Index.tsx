@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
+import Footer from "@/components/Footer";
 import ChefCard from "@/components/ChefCard";
 import SearchFilters from "@/components/SearchFilters";
 import { chefs } from "@/data/chefs";
@@ -108,6 +109,7 @@ const Index = () => {
         )}
       </main>
 
+      <Footer />
       <BottomNav />
     </div>
   );
