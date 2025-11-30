@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Calendar, ChefHat } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
+import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 
 const Reservations = () => {
@@ -38,6 +39,7 @@ const Reservations = () => {
         )}
       </main>
 
+      <Footer />
       <BottomNav />
     </div>
   );

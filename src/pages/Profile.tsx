@@ -2,6 +2,7 @@ import { User, Settings, HelpCircle, ShoppingCart } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
+import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import LocationSettings from "@/components/LocationSettings";
 import { useLocation } from "@/contexts/LocationContext";
@@ -55,6 +56,7 @@ const Profile = () => {
         </div>
       </main>
 
+      <Footer />
       <BottomNav />
     </div>
   );
