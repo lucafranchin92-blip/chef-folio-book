@@ -1,8 +1,11 @@
 import { Link } from "react-router-dom";
-import { Star, MapPin, Clock } from "lucide-react";
+import { Star, MapPin, Clock, ShoppingCart } from "lucide-react";
 import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
 import { Chef } from "@/types/chef";
 import { useLocation } from "@/contexts/LocationContext";
+import { useCart } from "@/contexts/CartContext";
+import { toast } from "@/hooks/use-toast";
 
 interface ChefCardProps {
   chef: Chef;
@@ -17,9 +20,43 @@ const isNearby = (chefLocation: string, userLocation: string): boolean => {
   );
 };
 
+const extractPrice = (priceRange: string): number => {
+  const match = priceRange.match(/\d+/);
+  return match ? parseInt(match[0]) : 200;
+};
+
 const ChefCard = ({ chef }: ChefCardProps) => {
   const { userLocation } = useLocation();
+  const { addItem } = useCart();
   const nearby = isNearby(chef.location, userLocation);
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!chef.available) {
+      toast({
+        title: "Chef Unavailable",
+        description: `${chef.name} is currently not available for bookings.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    addItem({
+      chef,
+      serviceType: "Private Dining",
+      date: new Date().toISOString().split('T')[0],
+      guests: 4,
+      price: extractPrice(chef.priceRange),
+    });
+
+    toast({
+      title: "Added to Cart",
+      description: `${chef.name} has been added to your cart.`,
+    });
+  };
+
   return (
     <Link to={`/chef/${chef.id}`} className="block group">
       <div className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/50 transition-all duration-300 hover:shadow-lg">
@@ -81,6 +118,18 @@ const ChefCard = ({ chef }: ChefCardProps) => {
               </Badge>
             ))}
           </div>
+
+          {/* Add to Cart Button */}
+          <Button
+            variant="gold"
+            size="sm"
+            className="w-full mt-4"
+            onClick={handleAddToCart}
+            disabled={!chef.available}
+          >
+            <ShoppingCart className="w-4 h-4 mr-2" />
+            Add to Cart
+          </Button>
         </div>
       </div>
     </Link>
