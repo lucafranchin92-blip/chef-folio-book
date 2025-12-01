@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Star, MapPin, Clock, Calendar, Users } from "lucide-react";
+import { ArrowLeft, Star, MapPin, Clock, Calendar, Users, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import BottomNav from "@/components/BottomNav";
 import { chefs } from "@/data/chefs";
 import { toast } from "@/hooks/use-toast";
+import { useCart } from "@/contexts/CartContext";
 
 const eventTypes = [
   "Intimate Dinner",
@@ -18,9 +19,15 @@ const eventTypes = [
   "Holiday Gathering",
 ];
 
+const extractPrice = (priceRange: string): number => {
+  const match = priceRange.match(/\d+/);
+  return match ? parseInt(match[0]) : 200;
+};
+
 const ChefProfile = () => {
   const { id } = useParams();
   const chef = chefs.find((c) => c.id === id);
+  const { addItem } = useCart();
 
   const [formData, setFormData] = useState({
     date: "",
@@ -267,15 +274,38 @@ const ChefProfile = () => {
                 />
               </div>
 
-              <Button
-                type="submit"
-                variant="gold"
-                size="xl"
-                className="w-full"
-                disabled={!chef.available}
-              >
-                {chef.available ? "Send Booking Request" : "Currently Unavailable"}
-              </Button>
+              <div className="flex gap-3">
+                <Button
+                  type="submit"
+                  variant="gold"
+                  size="xl"
+                  className="flex-1"
+                  disabled={!chef.available}
+                >
+                  {chef.available ? "Send Booking Request" : "Currently Unavailable"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="xl"
+                  disabled={!chef.available}
+                  onClick={() => {
+                    addItem({
+                      chef,
+                      serviceType: formData.eventType || "Private Dining",
+                      date: formData.date || new Date().toISOString().split('T')[0],
+                      guests: parseInt(formData.guests) || 4,
+                      price: extractPrice(chef.priceRange),
+                    });
+                    toast({
+                      title: "Added to Cart",
+                      description: `${chef.name} has been added to your cart.`,
+                    });
+                  }}
+                >
+                  <ShoppingCart className="w-5 h-5" />
+                </Button>
+              </div>
 
               <p className="text-muted-foreground font-sans text-xs text-center">
                 Free to request • Pay after confirmation
