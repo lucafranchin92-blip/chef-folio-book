@@ -18,47 +18,38 @@ const Footer = () => {
             <span className="text-xs text-muted-foreground font-sans uppercase tracking-wider">
               We Accept
             </span>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               {/* Google Pay */}
-              <div className="flex items-center justify-center h-8 px-3 bg-background rounded border border-border">
-                <svg viewBox="0 0 41 17" className="h-4 w-auto" fill="currentColor">
-                  <path d="M19.5 8.4v4.9h-1.6V2h4.2c1 0 1.9.3 2.6 1 .7.6 1.1 1.5 1.1 2.4 0 1-.4 1.8-1.1 2.4-.7.7-1.6 1-2.6 1h-2.6zm0-5v3.6h2.6c.6 0 1.1-.2 1.5-.6.4-.4.6-.9.6-1.4 0-.5-.2-1-.6-1.4-.4-.4-.9-.6-1.5-.6h-2.6z" fill="#5F6368"/>
-                  <path d="M30.2 5.6c1.2 0 2.1.3 2.8 1 .7.6 1 1.5 1 2.6v5.1h-1.5v-1.1h-.1c-.6.9-1.5 1.4-2.6 1.4-.9 0-1.7-.3-2.3-.8-.6-.5-.9-1.2-.9-2 0-.9.3-1.5 1-2 .6-.5 1.5-.7 2.6-.7.9 0 1.7.2 2.2.5v-.3c0-.6-.2-1-.6-1.4-.4-.4-.9-.6-1.5-.6-.9 0-1.5.4-2 1.1l-1.4-.9c.7-1.1 1.8-1.6 3.3-1.6zm-2 6c0 .4.2.8.5 1 .3.3.7.4 1.2.4.6 0 1.2-.2 1.7-.7.5-.5.7-1 .7-1.6-.4-.3-1-.5-1.9-.5-.6 0-1.2.1-1.5.4-.5.3-.7.6-.7 1z" fill="#5F6368"/>
-                  <path d="M41 5.9l-5.2 12h-1.6l1.9-4.2-3.4-7.8h1.7l2.5 6h0l2.4-6h1.7z" fill="#5F6368"/>
-                  <path d="M13.5 7.3c0-.5 0-.9-.1-1.4H6.9v2.6h3.7c-.2.9-.7 1.6-1.4 2.1v1.7h2.3c1.3-1.2 2.1-3.1 2.1-5z" fill="#4285F4"/>
-                  <path d="M6.9 14c1.9 0 3.5-.6 4.6-1.7l-2.3-1.7c-.6.4-1.4.7-2.4.7-1.8 0-3.4-1.2-3.9-2.9H.6v1.8c1.2 2.3 3.5 3.8 6.3 3.8z" fill="#34A853"/>
-                  <path d="M3 8.4c-.3-.9-.3-1.8 0-2.6V4H.6C-.4 5.8-.4 8 .6 9.8L3 8.4z" fill="#FBBC04"/>
-                  <path d="M6.9 2.9c1 0 2 .3 2.7 1l2-2C10.3.7 8.7 0 6.9 0 4.1 0 1.8 1.5.6 3.8L3 5.6c.5-1.7 2.1-2.7 3.9-2.7z" fill="#EA4335"/>
-                </svg>
+              <div className="flex items-center justify-center h-8 px-3 bg-background rounded-md border border-border">
+                <span className="text-xs font-semibold tracking-tight">
+                  <span className="text-[#4285F4]">G</span>
+                  <span className="text-[#EA4335]">o</span>
+                  <span className="text-[#FBBC04]">o</span>
+                  <span className="text-[#4285F4]">g</span>
+                  <span className="text-[#34A853]">l</span>
+                  <span className="text-[#EA4335]">e</span>
+                  <span className="text-muted-foreground ml-1">Pay</span>
+                </span>
               </div>
 
               {/* Apple Pay */}
-              <div className="flex items-center justify-center h-8 px-3 bg-background rounded border border-border">
-                <svg viewBox="0 0 43 18" className="h-4 w-auto" fill="currentColor">
-                  <path d="M8.2 3.4c-.5.6-1.3 1.1-2.1 1-.1-.8.3-1.6.7-2.2.5-.6 1.4-1 2.1-1 .1.8-.2 1.6-.7 2.2zm.7 1.1c-1.2-.1-2.2.7-2.7.7-.6 0-1.4-.6-2.4-.6-1.2 0-2.3.7-3 1.8-1.3 2.2-.3 5.5.9 7.3.6.9 1.4 1.9 2.4 1.8 1-.1 1.3-.6 2.5-.6 1.2 0 1.4.6 2.5.6 1 0 1.7-.9 2.3-1.8.7-1 1-2 1-2.1-.1 0-2-.8-2-3 0-1.9 1.5-2.8 1.6-2.8-.9-1.3-2.2-1.4-2.7-1.4h-.4v.1z" fill="currentColor"/>
-                  <path d="M21 1.4c2.9 0 4.9 2 4.9 4.9 0 2.9-2.1 4.9-5 4.9H18v5.1h-2.3V1.4H21zm-3 7.9h2.5c2 0 3.1-1.1 3.1-2.9 0-1.9-1.1-2.9-3.1-2.9H18v5.8zm9.1 4.1c0-1.9 1.5-3 4-3.2l3-.2v-.8c0-1.2-.8-1.9-2.1-1.9-1.3 0-2.1.6-2.3 1.6h-2.1c.1-2 1.8-3.5 4.4-3.5 2.6 0 4.3 1.4 4.3 3.6v7.5h-2.1v-1.8h-.1c-.6 1.2-2 2-3.4 2-2.2 0-3.6-1.3-3.6-3.3zm7-1v-.9l-2.7.2c-1.3.1-2 .6-2 1.6 0 .9.8 1.5 1.9 1.5 1.5 0 2.8-1 2.8-2.4zm4.1 6.4v-1.8c.2 0 .6.1.8.1 1.1 0 1.7-.5 2.1-1.7l.2-.7-4-11h2.4l2.8 9h0l2.8-9h2.3l-4.1 11.5c-1 2.7-2.1 3.6-4.4 3.6-.3 0-.8 0-.9-.1z" fill="currentColor"/>
-                </svg>
+              <div className="flex items-center justify-center h-8 px-3 bg-background rounded-md border border-border">
+                <span className="text-xs font-semibold text-foreground tracking-tight">
+                  <span className="mr-0.5"></span> Pay
+                </span>
               </div>
 
               {/* PayPal */}
-              <div className="flex items-center justify-center h-8 px-3 bg-background rounded border border-border">
-                <svg viewBox="0 0 101 32" className="h-4 w-auto">
-                  <path d="M12.2 7h6.2c3.1 0 5.3 1.4 4.9 4.6-.5 4.2-3 6.5-6.4 6.5H15l-.9 5.9H11l1.2-17zm4 8.7h1.6c1.7 0 2.9-.9 3.2-2.7.2-1.4-.5-2.2-2.2-2.2h-1.6l-1 4.9z" fill="#003087"/>
-                  <path d="M31.8 11.1c1.9 0 3.3.9 3.1 2.9-.3 2.6-1.9 4.1-4.3 4.1h-2.1l-.6 3.9h-2.7l1.4-10.9h5.2zm-2 5.1h1.1c1 0 1.7-.6 1.9-1.5.1-.8-.4-1.3-1.3-1.3h-1.1l-.6 2.8z" fill="#003087"/>
-                  <path d="M41 11.1c2.6 0 4 1.6 3.6 4.2-.4 2.9-2.5 4.8-5.2 4.8-2.6 0-4-1.6-3.6-4.2.4-2.9 2.5-4.8 5.2-4.8zm-1.4 6.8c1.3 0 2.2-1 2.4-2.4.2-1.4-.4-2.4-1.7-2.4s-2.2 1-2.4 2.4c-.2 1.4.4 2.4 1.7 2.4z" fill="#003087"/>
-                  <path d="M60 7h6.2c3.1 0 5.3 1.4 4.9 4.6-.5 4.2-3 6.5-6.4 6.5h-1.9l-.9 5.9h-3.1L60 7zm4 8.7h1.6c1.7 0 2.9-.9 3.2-2.7.2-1.4-.5-2.2-2.2-2.2h-1.6l-1 4.9z" fill="#0070E0"/>
-                  <path d="M79.6 11.1c1.9 0 3.3.9 3.1 2.9-.3 2.6-1.9 4.1-4.3 4.1h-2.1l-.6 3.9h-2.7l1.4-10.9h5.2zm-2 5.1h1.1c1 0 1.7-.6 1.9-1.5.1-.8-.4-1.3-1.3-1.3h-1.1l-.6 2.8z" fill="#0070E0"/>
-                  <path d="M88.8 11.1c2.6 0 4 1.6 3.6 4.2-.4 2.9-2.5 4.8-5.2 4.8-2.6 0-4-1.6-3.6-4.2.4-2.9 2.5-4.8 5.2-4.8zm-1.4 6.8c1.3 0 2.2-1 2.4-2.4.2-1.4-.4-2.4-1.7-2.4s-2.2 1-2.4 2.4c-.2 1.4.4 2.4 1.7 2.4z" fill="#0070E0"/>
-                  <path d="M94.6 22l1-6.3c.1-.5 0-.7-.4-.7h-1.9l.4-2.4h4.6c1.1 0 1.5.5 1.3 1.6l-1.1 7.1c-.1.7.1.9.7.9l-.3 1.8c-.2 0-.5.1-.8.1-1.8 0-2.6-.5-2.3-2.1h-.1c-.8 1.5-2 2.2-3.6 2.2-1.8 0-2.7-1.1-2.4-2.9l.9-5.8h2.7l-.8 5.1c-.2 1.1.3 1.5 1.1 1.5 1 0 1.8-.8 2-2.1z" fill="#0070E0"/>
-                  <path d="M53.5 11.1h2.1l-.2 1.3h.1c.6-1 1.6-1.5 2.8-1.5.4 0 .7 0 1 .1l-.5 2.6c-.3-.1-.7-.1-1-.1-1.4 0-2.4.9-2.6 2.4l-.7 4.2h-2.7l1.7-9z" fill="#003087"/>
-                </svg>
+              <div className="flex items-center justify-center h-8 px-3 bg-background rounded-md border border-border">
+                <span className="text-xs font-bold tracking-tight">
+                  <span className="text-[#003087]">Pay</span>
+                  <span className="text-[#009cde]">Pal</span>
+                </span>
               </div>
 
               {/* Stripe */}
-              <div className="flex items-center justify-center h-8 px-3 bg-background rounded border border-border">
-                <svg viewBox="0 0 60 25" className="h-4 w-auto">
-                  <path d="M59.64 14.28h-8.06c.19 1.93 1.6 2.55 3.2 2.55 1.64 0 2.96-.37 4.05-.95v3.32a10.16 10.16 0 01-4.56 1.02c-4.42 0-6.98-2.9-6.98-7.22 0-4.05 2.5-7.22 6.47-7.22 3.97 0 5.88 3.17 5.88 7.22v1.28zm-4.11-5.35c-.95 0-1.86.72-1.93 2.07h3.79c-.07-1.35-.79-2.07-1.86-2.07zm-10.63 11.01V6.65l4.28-.91V19.94h-4.28zm-5.05-5.35l4.05-8.21h-4.67l-2.03 5.07-2.19-5.07h-4.83l4.28 8.37-4.28 8.37h4.67l2.35-5.28 2.35 5.28h4.67l-4.37-8.53zM14.64 20.16c-4.14 0-7-2.9-7-7.22 0-4.32 2.86-7.22 7-7.22 4.14 0 7 2.9 7 7.22 0 4.32-2.86 7.22-7 7.22zm0-10.63c-1.64 0-2.74 1.35-2.74 3.41 0 2.07 1.1 3.41 2.74 3.41 1.64 0 2.74-1.35 2.74-3.41 0-2.07-1.1-3.41-2.74-3.41zM4.28 10.97V6.65H0V19.94h4.28v-5.91c0-1.93.79-2.74 2.35-2.74.53 0 1.02.07 1.47.19V6.65c-.38-.07-.72-.12-1.1-.12-1.64 0-2.35.79-2.72 1.35V6.93l-4.28.91v3.13z" fill="#635BFF"/>
-                </svg>
+              <div className="flex items-center justify-center h-8 px-3 bg-background rounded-md border border-border">
+                <span className="text-xs font-bold text-[#635BFF] tracking-tight">stripe</span>
               </div>
             </div>
           </div>
