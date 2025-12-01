@@ -90,9 +90,11 @@ const Cart = () => {
                 <span className="font-sans text-muted-foreground">Subtotal</span>
                 <span className="font-serif text-xl">${totalPrice.toFixed(2)}</span>
               </div>
-              <Button variant="gold" className="w-full" size="lg">
-                Proceed to Checkout
-              </Button>
+              <Link to="/checkout">
+                <Button variant="gold" className="w-full" size="lg">
+                  Proceed to Checkout
+                </Button>
+              </Link>
             </div>
           </div>
         )}
