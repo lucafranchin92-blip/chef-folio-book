@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, CreditCard, Check } from "lucide-react";
+import { ArrowLeft, CreditCard, Check, AlertCircle } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
 import Footer from "@/components/Footer";
@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useCart } from "@/contexts/CartContext";
 import { toast } from "@/hooks/use-toast";
+import { contactDetailsSchema, deliveryAddressSchema } from "@/lib/validations";
+import { z } from "zod";
 
 const paymentMethods = [
   { id: "card", label: "Credit / Debit Card", icon: "💳" },
@@ -17,6 +19,11 @@ const paymentMethods = [
   { id: "apple", label: "Apple Pay", icon: "" },
   { id: "paypal", label: "PayPal", icon: "P" },
 ];
+
+type FieldErrors = {
+  contactDetails?: Record<string, string>;
+  deliveryAddress?: Record<string, string>;
+};
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -40,17 +47,71 @@ const Checkout = () => {
 
   const [paymentMethod, setPaymentMethod] = useState("card");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [errors, setErrors] = useState<FieldErrors>({});
 
   const handleContactChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setContactDetails({ ...contactDetails, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setContactDetails({ ...contactDetails, [name]: value });
+    // Clear error for this field when user starts typing
+    if (errors.contactDetails?.[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        contactDetails: { ...prev.contactDetails, [name]: undefined },
+      }));
+    }
   };
 
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDeliveryAddress({ ...deliveryAddress, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setDeliveryAddress({ ...deliveryAddress, [name]: value });
+    // Clear error for this field when user starts typing
+    if (errors.deliveryAddress?.[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        deliveryAddress: { ...prev.deliveryAddress, [name]: undefined },
+      }));
+    }
+  };
+
+  const validateForm = (): boolean => {
+    const newErrors: FieldErrors = {};
+    
+    // Validate contact details
+    const contactResult = contactDetailsSchema.safeParse(contactDetails);
+    if (!contactResult.success) {
+      newErrors.contactDetails = {};
+      contactResult.error.errors.forEach((err) => {
+        const field = err.path[0] as string;
+        newErrors.contactDetails![field] = err.message;
+      });
+    }
+
+    // Validate delivery address
+    const addressResult = deliveryAddressSchema.safeParse(deliveryAddress);
+    if (!addressResult.success) {
+      newErrors.deliveryAddress = {};
+      addressResult.error.errors.forEach((err) => {
+        const field = err.path[0] as string;
+        newErrors.deliveryAddress![field] = err.message;
+      });
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      toast({
+        title: "Validation Error",
+        description: "Please correct the errors in the form.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsProcessing(true);
 
     // Simulate payment processing
@@ -65,6 +126,16 @@ const Checkout = () => {
     });
 
     navigate("/reservations");
+  };
+
+  const ErrorMessage = ({ message }: { message?: string }) => {
+    if (!message) return null;
+    return (
+      <p className="text-destructive text-xs mt-1 flex items-center gap-1">
+        <AlertCircle className="w-3 h-3" />
+        {message}
+      </p>
+    );
   };
 
   if (items.length === 0) {
@@ -120,9 +191,10 @@ const Checkout = () => {
                       value={contactDetails.firstName}
                       onChange={handleContactChange}
                       placeholder="John"
-                      required
-                      className="mt-1.5"
+                      className={`mt-1.5 ${errors.contactDetails?.firstName ? "border-destructive" : ""}`}
+                      maxLength={50}
                     />
+                    <ErrorMessage message={errors.contactDetails?.firstName} />
                   </div>
                   <div>
                     <Label htmlFor="lastName">Last Name</Label>
@@ -132,9 +204,10 @@ const Checkout = () => {
                       value={contactDetails.lastName}
                       onChange={handleContactChange}
                       placeholder="Doe"
-                      required
-                      className="mt-1.5"
+                      className={`mt-1.5 ${errors.contactDetails?.lastName ? "border-destructive" : ""}`}
+                      maxLength={50}
                     />
+                    <ErrorMessage message={errors.contactDetails?.lastName} />
                   </div>
                   <div>
                     <Label htmlFor="email">Email Address</Label>
@@ -145,9 +218,10 @@ const Checkout = () => {
                       value={contactDetails.email}
                       onChange={handleContactChange}
                       placeholder="john@example.com"
-                      required
-                      className="mt-1.5"
+                      className={`mt-1.5 ${errors.contactDetails?.email ? "border-destructive" : ""}`}
+                      maxLength={255}
                     />
+                    <ErrorMessage message={errors.contactDetails?.email} />
                   </div>
                   <div>
                     <Label htmlFor="phone">Phone Number</Label>
@@ -158,9 +232,10 @@ const Checkout = () => {
                       value={contactDetails.phone}
                       onChange={handleContactChange}
                       placeholder="+1 (555) 000-0000"
-                      required
-                      className="mt-1.5"
+                      className={`mt-1.5 ${errors.contactDetails?.phone ? "border-destructive" : ""}`}
+                      maxLength={20}
                     />
+                    <ErrorMessage message={errors.contactDetails?.phone} />
                   </div>
                 </div>
               </section>
@@ -180,9 +255,10 @@ const Checkout = () => {
                       value={deliveryAddress.street}
                       onChange={handleAddressChange}
                       placeholder="123 Main Street"
-                      required
-                      className="mt-1.5"
+                      className={`mt-1.5 ${errors.deliveryAddress?.street ? "border-destructive" : ""}`}
+                      maxLength={200}
                     />
+                    <ErrorMessage message={errors.deliveryAddress?.street} />
                   </div>
                   <div>
                     <Label htmlFor="apartment">Apartment, Suite, etc. (optional)</Label>
@@ -193,6 +269,7 @@ const Checkout = () => {
                       onChange={handleAddressChange}
                       placeholder="Apt 4B"
                       className="mt-1.5"
+                      maxLength={100}
                     />
                   </div>
                   <div className="grid sm:grid-cols-2 gap-4">
@@ -204,9 +281,10 @@ const Checkout = () => {
                         value={deliveryAddress.city}
                         onChange={handleAddressChange}
                         placeholder="New York"
-                        required
-                        className="mt-1.5"
+                        className={`mt-1.5 ${errors.deliveryAddress?.city ? "border-destructive" : ""}`}
+                        maxLength={100}
                       />
+                      <ErrorMessage message={errors.deliveryAddress?.city} />
                     </div>
                     <div>
                       <Label htmlFor="state">State / Province</Label>
@@ -216,9 +294,10 @@ const Checkout = () => {
                         value={deliveryAddress.state}
                         onChange={handleAddressChange}
                         placeholder="NY"
-                        required
-                        className="mt-1.5"
+                        className={`mt-1.5 ${errors.deliveryAddress?.state ? "border-destructive" : ""}`}
+                        maxLength={100}
                       />
+                      <ErrorMessage message={errors.deliveryAddress?.state} />
                     </div>
                   </div>
                   <div className="grid sm:grid-cols-2 gap-4">
@@ -230,9 +309,10 @@ const Checkout = () => {
                         value={deliveryAddress.zipCode}
                         onChange={handleAddressChange}
                         placeholder="10001"
-                        required
-                        className="mt-1.5"
+                        className={`mt-1.5 ${errors.deliveryAddress?.zipCode ? "border-destructive" : ""}`}
+                        maxLength={20}
                       />
+                      <ErrorMessage message={errors.deliveryAddress?.zipCode} />
                     </div>
                     <div>
                       <Label htmlFor="country">Country</Label>
@@ -242,9 +322,10 @@ const Checkout = () => {
                         value={deliveryAddress.country}
                         onChange={handleAddressChange}
                         placeholder="United States"
-                        required
-                        className="mt-1.5"
+                        className={`mt-1.5 ${errors.deliveryAddress?.country ? "border-destructive" : ""}`}
+                        maxLength={100}
                       />
+                      <ErrorMessage message={errors.deliveryAddress?.country} />
                     </div>
                   </div>
                 </div>
