@@ -1,15 +1,36 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
-import { Menu, X, ChefHat, User, ShoppingCart } from "lucide-react";
+import { Menu, X, ChefHat, User, ShoppingCart, LogOut } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const { totalItems } = useCart();
+  const { user, signOut } = useAuth();
+  const { toast } = useToast();
 
   const isActive = (path: string) => location.pathname === path;
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast({
+      title: "Signed Out",
+      description: "You've been signed out successfully.",
+    });
+    navigate("/");
+  };
 
   return (
     <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
@@ -51,10 +72,41 @@ const Navbar = () => {
                 </span>
               )}
             </Link>
-            <Button variant="gold" size="sm">
-              <User className="w-4 h-4 mr-1" />
-              Sign In
-            </Button>
+            
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="gap-2">
+                    <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
+                      <User className="w-4 h-4 text-primary" />
+                    </div>
+                    <span className="font-sans text-sm max-w-[100px] truncate">
+                      {user.user_metadata?.full_name || user.email?.split("@")[0]}
+                    </span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile" className="cursor-pointer">
+                      <User className="w-4 h-4 mr-2" />
+                      Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link to="/auth">
+                <Button variant="gold" size="sm">
+                  <User className="w-4 h-4 mr-1" />
+                  Sign In
+                </Button>
+              </Link>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -88,10 +140,36 @@ const Navbar = () => {
               >
                 My Reservations
               </Link>
-              <Button variant="gold" size="default" className="w-full">
-                <User className="w-4 h-4 mr-1" />
-                Sign In
-              </Button>
+              {user ? (
+                <>
+                  <Link
+                    to="/profile"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="font-sans text-sm tracking-wide text-muted-foreground"
+                  >
+                    Profile
+                  </Link>
+                  <Button
+                    variant="outline"
+                    size="default"
+                    className="w-full"
+                    onClick={() => {
+                      handleSignOut();
+                      setIsMobileMenuOpen(false);
+                    }}
+                  >
+                    <LogOut className="w-4 h-4 mr-1" />
+                    Sign Out
+                  </Button>
+                </>
+              ) : (
+                <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Button variant="gold" size="default" className="w-full">
+                    <User className="w-4 h-4 mr-1" />
+                    Sign In
+                  </Button>
+                </Link>
+              )}
             </div>
           </div>
         )}
