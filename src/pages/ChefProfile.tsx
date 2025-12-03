@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Star, MapPin, Clock, Calendar, Users, ShoppingCart } from "lucide-react";
+import { ArrowLeft, Star, MapPin, Clock, Calendar, Users, ShoppingCart, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,6 +9,7 @@ import BottomNav from "@/components/BottomNav";
 import { chefs } from "@/data/chefs";
 import { toast } from "@/hooks/use-toast";
 import { useCart } from "@/contexts/CartContext";
+import { bookingFormSchema } from "@/lib/validations";
 
 const eventTypes = [
   "Intimate Dinner",
@@ -24,6 +25,8 @@ const extractPrice = (priceRange: string): number => {
   return match ? parseInt(match[0]) : 200;
 };
 
+type FormErrors = Record<string, string>;
+
 const ChefProfile = () => {
   const { id } = useParams();
   const chef = chefs.find((c) => c.id === id);
@@ -38,6 +41,8 @@ const ChefProfile = () => {
     message: "",
   });
 
+  const [errors, setErrors] = useState<FormErrors>({});
+
   if (!chef) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -51,8 +56,35 @@ const ChefProfile = () => {
     );
   }
 
+  const validateForm = (): boolean => {
+    const result = bookingFormSchema.safeParse(formData);
+    
+    if (!result.success) {
+      const newErrors: FormErrors = {};
+      result.error.errors.forEach((err) => {
+        const field = err.path[0] as string;
+        newErrors[field] = err.message;
+      });
+      setErrors(newErrors);
+      return false;
+    }
+    
+    setErrors({});
+    return true;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      toast({
+        title: "Validation Error",
+        description: "Please correct the errors in the form.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     toast({
       title: "Reservation Request Sent!",
       description: `Your request to book ${chef.name} has been submitted. You'll hear back within 24 hours.`,
@@ -65,12 +97,70 @@ const ChefProfile = () => {
       location: "",
       message: "",
     });
+    setErrors({});
   };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    // Clear error for this field when user starts typing
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: undefined }));
+    }
+  };
+
+  const handleAddToCart = () => {
+    // Validate required fields for cart addition
+    const cartValidation = bookingFormSchema.safeParse({
+      ...formData,
+      // Allow empty message for cart
+      message: formData.message || "",
+    });
+
+    if (!cartValidation.success) {
+      const newErrors: FormErrors = {};
+      cartValidation.error.errors.forEach((err) => {
+        const field = err.path[0] as string;
+        // Skip message field errors for cart
+        if (field !== "message") {
+          newErrors[field] = err.message;
+        }
+      });
+      
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors);
+        toast({
+          title: "Missing Information",
+          description: "Please fill in the required fields before adding to cart.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    addItem({
+      chef,
+      serviceType: formData.eventType || "Private Dining",
+      date: formData.date || new Date().toISOString().split('T')[0],
+      guests: parseInt(formData.guests) || 4,
+      price: extractPrice(chef.priceRange),
+    });
+    toast({
+      title: "Added to Cart",
+      description: `${chef.name} has been added to your cart.`,
+    });
+  };
+
+  const ErrorMessage = ({ message }: { message?: string }) => {
+    if (!message) return null;
+    return (
+      <p className="text-destructive text-xs mt-1 flex items-center gap-1">
+        <AlertCircle className="w-3 h-3" />
+        {message}
+      </p>
+    );
   };
 
   return (
@@ -180,10 +270,10 @@ const ChefProfile = () => {
                     type="date"
                     value={formData.date}
                     onChange={handleChange}
-                    required
                     disabled={!chef.available}
-                    className="bg-secondary border-border"
+                    className={`bg-secondary border-border ${errors.date ? "border-destructive" : ""}`}
                   />
+                  <ErrorMessage message={errors.date} />
                 </div>
                 <div>
                   <label className="block text-muted-foreground font-sans text-sm mb-2">
@@ -195,10 +285,10 @@ const ChefProfile = () => {
                     type="time"
                     value={formData.time}
                     onChange={handleChange}
-                    required
                     disabled={!chef.available}
-                    className="bg-secondary border-border"
+                    className={`bg-secondary border-border ${errors.time ? "border-destructive" : ""}`}
                   />
+                  <ErrorMessage message={errors.time} />
                 </div>
               </div>
 
@@ -216,10 +306,10 @@ const ChefProfile = () => {
                     placeholder="2-50"
                     value={formData.guests}
                     onChange={handleChange}
-                    required
                     disabled={!chef.available}
-                    className="bg-secondary border-border"
+                    className={`bg-secondary border-border ${errors.guests ? "border-destructive" : ""}`}
                   />
+                  <ErrorMessage message={errors.guests} />
                 </div>
                 <div>
                   <label className="block text-muted-foreground font-sans text-sm mb-2">
@@ -229,9 +319,10 @@ const ChefProfile = () => {
                     name="eventType"
                     value={formData.eventType}
                     onChange={handleChange}
-                    required
                     disabled={!chef.available}
-                    className="w-full h-10 px-3 rounded-md bg-secondary border border-border text-foreground font-sans text-sm"
+                    className={`w-full h-10 px-3 rounded-md bg-secondary border text-foreground font-sans text-sm ${
+                      errors.eventType ? "border-destructive" : "border-border"
+                    }`}
                   >
                     <option value="">Select type</option>
                     {eventTypes.map((type) => (
@@ -240,6 +331,7 @@ const ChefProfile = () => {
                       </option>
                     ))}
                   </select>
+                  <ErrorMessage message={errors.eventType} />
                 </div>
               </div>
 
@@ -253,10 +345,11 @@ const ChefProfile = () => {
                   placeholder="City or address"
                   value={formData.location}
                   onChange={handleChange}
-                  required
                   disabled={!chef.available}
-                  className="bg-secondary border-border"
+                  className={`bg-secondary border-border ${errors.location ? "border-destructive" : ""}`}
+                  maxLength={200}
                 />
+                <ErrorMessage message={errors.location} />
               </div>
 
               <div>
@@ -271,7 +364,11 @@ const ChefProfile = () => {
                   disabled={!chef.available}
                   rows={3}
                   className="bg-secondary border-border resize-none"
+                  maxLength={1000}
                 />
+                <p className="text-muted-foreground text-xs mt-1">
+                  {formData.message.length}/1000 characters
+                </p>
               </div>
 
               <div className="flex gap-3">
@@ -289,19 +386,7 @@ const ChefProfile = () => {
                   variant="outline"
                   size="xl"
                   disabled={!chef.available}
-                  onClick={() => {
-                    addItem({
-                      chef,
-                      serviceType: formData.eventType || "Private Dining",
-                      date: formData.date || new Date().toISOString().split('T')[0],
-                      guests: parseInt(formData.guests) || 4,
-                      price: extractPrice(chef.priceRange),
-                    });
-                    toast({
-                      title: "Added to Cart",
-                      description: `${chef.name} has been added to your cart.`,
-                    });
-                  }}
+                  onClick={handleAddToCart}
                 >
                   <ShoppingCart className="w-5 h-5" />
                 </Button>
