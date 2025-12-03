@@ -282,32 +282,12 @@ const Checkout = () => {
                 </RadioGroup>
 
                 {paymentMethod === "card" && (
-                  <div className="mt-6 space-y-4 pt-6 border-t border-border">
-                    <div>
-                      <Label htmlFor="cardNumber">Card Number</Label>
-                      <Input
-                        id="cardNumber"
-                        placeholder="1234 5678 9012 3456"
-                        className="mt-1.5"
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="expiry">Expiry Date</Label>
-                        <Input
-                          id="expiry"
-                          placeholder="MM/YY"
-                          className="mt-1.5"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="cvv">CVV</Label>
-                        <Input
-                          id="cvv"
-                          placeholder="123"
-                          className="mt-1.5"
-                        />
-                      </div>
+                  <div className="mt-6 pt-6 border-t border-border">
+                    <div className="bg-muted/50 rounded-lg p-4 text-center">
+                      <CreditCard className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">
+                        Secure card payment will be processed via Stripe at checkout
+                      </p>
                     </div>
                   </div>
                 )}
