@@ -9,6 +9,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import ChefProfile from "./pages/ChefProfile";
+import ChefOnboarding from "./pages/ChefOnboarding";
 import Reservations from "./pages/Reservations";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
@@ -30,6 +31,14 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/chef/:id" element={<ChefProfile />} />
+                <Route
+                  path="/chef-onboarding"
+                  element={
+                    <ProtectedRoute>
+                      <ChefOnboarding />
+                    </ProtectedRoute>
+                  }
+                />
                 <Route path="/auth" element={<Auth />} />
                 <Route
                   path="/reservations"
