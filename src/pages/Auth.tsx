@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { Eye, EyeOff, ChefHat, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, ChefHat, AlertCircle, User, UtensilsCrossed } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,14 +11,17 @@ import { z } from "zod";
 const emailSchema = z.string().email("Please enter a valid email address");
 const passwordSchema = z.string().min(6, "Password must be at least 6 characters");
 
+type UserRole = "buyer" | "chef";
+
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [selectedRole, setSelectedRole] = useState<UserRole>("buyer");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string; fullName?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string; fullName?: string }>({}); 
   
   const { signIn, signUp, user, loading } = useAuth();
   const navigate = useNavigate();
@@ -85,7 +88,7 @@ const Auth = () => {
           });
         }
       } else {
-        const { error } = await signUp(email, password, fullName);
+        const { error } = await signUp(email, password, fullName, selectedRole);
         if (error) {
           if (error.message.includes("User already registered")) {
             toast({
@@ -148,26 +151,69 @@ const Auth = () => {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {!isLogin && (
-                <div>
-                  <Label htmlFor="fullName" className="font-sans">Full Name</Label>
-                  <Input
-                    id="fullName"
-                    type="text"
-                    value={fullName}
-                    onChange={(e) => {
-                      setFullName(e.target.value);
-                      setErrors((prev) => ({ ...prev, fullName: undefined }));
-                    }}
-                    placeholder="John Doe"
-                    className={errors.fullName ? "border-destructive" : ""}
-                  />
-                  {errors.fullName && (
-                    <p className="text-destructive text-xs mt-1 flex items-center gap-1">
-                      <AlertCircle className="w-3 h-3" />
-                      {errors.fullName}
-                    </p>
-                  )}
-                </div>
+                <>
+                  {/* Role Selection */}
+                  <div>
+                    <Label className="font-sans mb-3 block">I want to join as</Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedRole("buyer")}
+                        className={`p-4 rounded-lg border-2 transition-all flex flex-col items-center gap-2 ${
+                          selectedRole === "buyer"
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-muted-foreground"
+                        }`}
+                      >
+                        <User className={`w-6 h-6 ${selectedRole === "buyer" ? "text-primary" : "text-muted-foreground"}`} />
+                        <span className={`font-medium text-sm ${selectedRole === "buyer" ? "text-primary" : "text-foreground"}`}>
+                          Buyer
+                        </span>
+                        <span className="text-xs text-muted-foreground text-center">
+                          Book private chefs
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedRole("chef")}
+                        className={`p-4 rounded-lg border-2 transition-all flex flex-col items-center gap-2 ${
+                          selectedRole === "chef"
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-muted-foreground"
+                        }`}
+                      >
+                        <UtensilsCrossed className={`w-6 h-6 ${selectedRole === "chef" ? "text-primary" : "text-muted-foreground"}`} />
+                        <span className={`font-medium text-sm ${selectedRole === "chef" ? "text-primary" : "text-foreground"}`}>
+                          Chef
+                        </span>
+                        <span className="text-xs text-muted-foreground text-center">
+                          Offer your services
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="fullName" className="font-sans">Full Name</Label>
+                    <Input
+                      id="fullName"
+                      type="text"
+                      value={fullName}
+                      onChange={(e) => {
+                        setFullName(e.target.value);
+                        setErrors((prev) => ({ ...prev, fullName: undefined }));
+                      }}
+                      placeholder="John Doe"
+                      className={errors.fullName ? "border-destructive" : ""}
+                    />
+                    {errors.fullName && (
+                      <p className="text-destructive text-xs mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" />
+                        {errors.fullName}
+                      </p>
+                    )}
+                  </div>
+                </>
               )}
 
               <div>
