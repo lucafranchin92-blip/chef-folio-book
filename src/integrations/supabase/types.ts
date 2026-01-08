@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      chef_profiles: {
+        Row: {
+          available: boolean | null
+          created_at: string
+          cuisines: string[]
+          description: string
+          experience: string
+          id: string
+          image_url: string | null
+          location: string
+          name: string
+          price_range: string
+          rating: number | null
+          review_count: number | null
+          specialty: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          available?: boolean | null
+          created_at?: string
+          cuisines?: string[]
+          description: string
+          experience: string
+          id?: string
+          image_url?: string | null
+          location: string
+          name: string
+          price_range?: string
+          rating?: number | null
+          review_count?: number | null
+          specialty: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          available?: boolean | null
+          created_at?: string
+          cuisines?: string[]
+          description?: string
+          experience?: string
+          id?: string
+          image_url?: string | null
+          location?: string
+          name?: string
+          price_range?: string
+          rating?: number | null
+          review_count?: number | null
+          specialty?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
