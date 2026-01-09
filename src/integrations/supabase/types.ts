@@ -14,6 +14,59 @@ export type Database = {
   }
   public: {
     Tables: {
+      booking_requests: {
+        Row: {
+          buyer_id: string
+          chef_id: string
+          chef_response: string | null
+          created_at: string
+          event_date: string
+          event_time: string
+          event_type: string
+          guest_count: number
+          id: string
+          message: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          buyer_id: string
+          chef_id: string
+          chef_response?: string | null
+          created_at?: string
+          event_date: string
+          event_time: string
+          event_type: string
+          guest_count: number
+          id?: string
+          message?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          buyer_id?: string
+          chef_id?: string
+          chef_response?: string | null
+          created_at?: string
+          event_date?: string
+          event_time?: string
+          event_type?: string
+          guest_count?: number
+          id?: string
+          message?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_requests_chef_id_fkey"
+            columns: ["chef_id"]
+            isOneToOne: false
+            referencedRelation: "chef_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chef_profiles: {
         Row: {
           available: boolean | null

@@ -1,52 +1,68 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Star, MapPin, Clock, Calendar, Users, ShoppingCart, AlertCircle } from "lucide-react";
+import { ArrowLeft, Star, MapPin, Clock, Loader2, ChefHat } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import BottomNav from "@/components/BottomNav";
-import { chefs } from "@/data/chefs";
-import { toast } from "@/hooks/use-toast";
-import { useCart } from "@/contexts/CartContext";
-import { bookingFormSchema } from "@/lib/validations";
+import BookingRequestForm from "@/components/BookingRequestForm";
+import { supabase } from "@/integrations/supabase/client";
 
-const eventTypes = [
-  "Intimate Dinner",
-  "Anniversary",
-  "Birthday",
-  "Corporate Event",
-  "Wedding",
-  "Holiday Gathering",
-];
+interface ChefProfile {
+  id: string;
+  name: string;
+  specialty: string;
+  location: string;
+  experience: string;
+  description: string;
+  cuisines: string[];
+  price_range: string;
+  available: boolean;
+  image_url: string | null;
+  rating: number;
+  review_count: number;
+}
 
-const extractPrice = (priceRange: string): number => {
-  const match = priceRange.match(/\d+/);
-  return match ? parseInt(match[0]) : 200;
-};
-
-type FormErrors = Record<string, string>;
-
-const ChefProfile = () => {
+const ChefProfilePage = () => {
   const { id } = useParams();
-  const chef = chefs.find((c) => c.id === id);
-  const { addItem } = useCart();
+  const [chef, setChef] = useState<ChefProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const [formData, setFormData] = useState({
-    date: "",
-    time: "",
-    guests: "",
-    eventType: "",
-    location: "",
-    message: "",
-  });
+  useEffect(() => {
+    if (id) {
+      fetchChef();
+    }
+  }, [id]);
 
-  const [errors, setErrors] = useState<FormErrors>({});
+  const fetchChef = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("chef_profiles")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
+
+      if (error) throw error;
+      setChef(data);
+    } catch (error) {
+      console.error("Error fetching chef:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (!chef) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
+          <ChefHat className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
           <p className="text-muted-foreground mb-4">Chef not found</p>
           <Link to="/">
             <Button variant="gold">Back to Browse</Button>
@@ -55,113 +71,6 @@ const ChefProfile = () => {
       </div>
     );
   }
-
-  const validateForm = (): boolean => {
-    const result = bookingFormSchema.safeParse(formData);
-    
-    if (!result.success) {
-      const newErrors: FormErrors = {};
-      result.error.errors.forEach((err) => {
-        const field = err.path[0] as string;
-        newErrors[field] = err.message;
-      });
-      setErrors(newErrors);
-      return false;
-    }
-    
-    setErrors({});
-    return true;
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm()) {
-      toast({
-        title: "Validation Error",
-        description: "Please correct the errors in the form.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    toast({
-      title: "Reservation Request Sent!",
-      description: `Your request to book ${chef.name} has been submitted. You'll hear back within 24 hours.`,
-    });
-    setFormData({
-      date: "",
-      time: "",
-      guests: "",
-      eventType: "",
-      location: "",
-      message: "",
-    });
-    setErrors({});
-  };
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-    // Clear error for this field when user starts typing
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: undefined }));
-    }
-  };
-
-  const handleAddToCart = () => {
-    // Validate required fields for cart addition
-    const cartValidation = bookingFormSchema.safeParse({
-      ...formData,
-      // Allow empty message for cart
-      message: formData.message || "",
-    });
-
-    if (!cartValidation.success) {
-      const newErrors: FormErrors = {};
-      cartValidation.error.errors.forEach((err) => {
-        const field = err.path[0] as string;
-        // Skip message field errors for cart
-        if (field !== "message") {
-          newErrors[field] = err.message;
-        }
-      });
-      
-      if (Object.keys(newErrors).length > 0) {
-        setErrors(newErrors);
-        toast({
-          title: "Missing Information",
-          description: "Please fill in the required fields before adding to cart.",
-          variant: "destructive",
-        });
-        return;
-      }
-    }
-
-    addItem({
-      chef,
-      serviceType: formData.eventType || "Private Dining",
-      date: formData.date || new Date().toISOString().split('T')[0],
-      guests: parseInt(formData.guests) || 4,
-      price: extractPrice(chef.priceRange),
-    });
-    toast({
-      title: "Added to Cart",
-      description: `${chef.name} has been added to your cart.`,
-    });
-  };
-
-  const ErrorMessage = ({ message }: { message?: string }) => {
-    if (!message) return null;
-    return (
-      <p className="text-destructive text-xs mt-1 flex items-center gap-1">
-        <AlertCircle className="w-3 h-3" />
-        {message}
-      </p>
-    );
-  };
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
@@ -181,11 +90,17 @@ const ChefProfile = () => {
           <div>
             {/* Profile Header */}
             <div className="flex gap-4 mb-6">
-              <img
-                src={chef.image}
-                alt={chef.name}
-                className="w-24 h-24 md:w-32 md:h-32 rounded-xl object-cover"
-              />
+              {chef.image_url ? (
+                <img
+                  src={chef.image_url}
+                  alt={chef.name}
+                  className="w-24 h-24 md:w-32 md:h-32 rounded-xl object-cover"
+                />
+              ) : (
+                <div className="w-24 h-24 md:w-32 md:h-32 rounded-xl bg-muted flex items-center justify-center">
+                  <ChefHat className="w-10 h-10 text-muted-foreground" />
+                </div>
+              )}
               <div className="flex-1">
                 <div className="flex items-start justify-between">
                   <div>
@@ -193,15 +108,15 @@ const ChefProfile = () => {
                     <p className="text-primary font-sans">{chef.specialty}</p>
                   </div>
                   <Badge variant="secondary" className="text-sm">
-                    {chef.priceRange}
+                    {chef.price_range}
                   </Badge>
                 </div>
 
                 <div className="flex items-center gap-2 mt-2">
                   <Star className="w-4 h-4 fill-primary text-primary" />
-                  <span className="text-foreground font-sans">{chef.rating}</span>
+                  <span className="text-foreground font-sans">{chef.rating?.toFixed(1) || "0.0"}</span>
                   <span className="text-muted-foreground text-sm">
-                    ({chef.reviewCount} reviews)
+                    ({chef.review_count || 0} reviews)
                   </span>
                 </div>
 
@@ -252,150 +167,32 @@ const ChefProfile = () => {
             </div>
           </div>
 
-          {/* Booking Form */}
+          {/* Booking Section */}
           <div className="bg-card border border-border rounded-xl p-6">
             <h3 className="font-serif text-xl text-foreground mb-6">
-              Request a Booking
+              Book This Chef
             </h3>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-muted-foreground font-sans text-sm mb-2">
-                    <Calendar className="inline w-4 h-4 mr-1" />
-                    Date
-                  </label>
-                  <Input
-                    name="date"
-                    type="date"
-                    value={formData.date}
-                    onChange={handleChange}
-                    disabled={!chef.available}
-                    className={`bg-secondary border-border ${errors.date ? "border-destructive" : ""}`}
-                  />
-                  <ErrorMessage message={errors.date} />
-                </div>
-                <div>
-                  <label className="block text-muted-foreground font-sans text-sm mb-2">
-                    <Clock className="inline w-4 h-4 mr-1" />
-                    Time
-                  </label>
-                  <Input
-                    name="time"
-                    type="time"
-                    value={formData.time}
-                    onChange={handleChange}
-                    disabled={!chef.available}
-                    className={`bg-secondary border-border ${errors.time ? "border-destructive" : ""}`}
-                  />
-                  <ErrorMessage message={errors.time} />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-muted-foreground font-sans text-sm mb-2">
-                    <Users className="inline w-4 h-4 mr-1" />
-                    Guests
-                  </label>
-                  <Input
-                    name="guests"
-                    type="number"
-                    min="2"
-                    max="50"
-                    placeholder="2-50"
-                    value={formData.guests}
-                    onChange={handleChange}
-                    disabled={!chef.available}
-                    className={`bg-secondary border-border ${errors.guests ? "border-destructive" : ""}`}
-                  />
-                  <ErrorMessage message={errors.guests} />
-                </div>
-                <div>
-                  <label className="block text-muted-foreground font-sans text-sm mb-2">
-                    Event Type
-                  </label>
-                  <select
-                    name="eventType"
-                    value={formData.eventType}
-                    onChange={handleChange}
-                    disabled={!chef.available}
-                    className={`w-full h-10 px-3 rounded-md bg-secondary border text-foreground font-sans text-sm ${
-                      errors.eventType ? "border-destructive" : "border-border"
-                    }`}
-                  >
-                    <option value="">Select type</option>
-                    {eventTypes.map((type) => (
-                      <option key={type} value={type}>
-                        {type}
-                      </option>
-                    ))}
-                  </select>
-                  <ErrorMessage message={errors.eventType} />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-muted-foreground font-sans text-sm mb-2">
-                  <MapPin className="inline w-4 h-4 mr-1" />
-                  Event Location
-                </label>
-                <Input
-                  name="location"
-                  placeholder="City or address"
-                  value={formData.location}
-                  onChange={handleChange}
-                  disabled={!chef.available}
-                  className={`bg-secondary border-border ${errors.location ? "border-destructive" : ""}`}
-                  maxLength={200}
-                />
-                <ErrorMessage message={errors.location} />
-              </div>
-
-              <div>
-                <label className="block text-muted-foreground font-sans text-sm mb-2">
-                  Special Requests
-                </label>
-                <Textarea
-                  name="message"
-                  placeholder="Dietary restrictions, preferences, or special requests..."
-                  value={formData.message}
-                  onChange={handleChange}
-                  disabled={!chef.available}
-                  rows={3}
-                  className="bg-secondary border-border resize-none"
-                  maxLength={1000}
-                />
-                <p className="text-muted-foreground text-xs mt-1">
-                  {formData.message.length}/1000 characters
+            {chef.available ? (
+              <div className="space-y-4">
+                <p className="text-muted-foreground text-sm">
+                  Send a booking request to {chef.name}. They'll review your event details and respond within 24 hours.
+                </p>
+                <BookingRequestForm chefId={chef.id} chefName={chef.name} />
+                <p className="text-muted-foreground font-sans text-xs text-center">
+                  Free to request • Pay after confirmation
                 </p>
               </div>
-
-              <div className="flex gap-3">
-                <Button
-                  type="submit"
-                  variant="gold"
-                  size="xl"
-                  className="flex-1"
-                  disabled={!chef.available}
-                >
-                  {chef.available ? "Send Booking Request" : "Currently Unavailable"}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="xl"
-                  disabled={!chef.available}
-                  onClick={handleAddToCart}
-                >
-                  <ShoppingCart className="w-5 h-5" />
-                </Button>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground mb-4">
+                  This chef is currently not accepting new bookings.
+                </p>
+                <Link to="/">
+                  <Button variant="outline">Browse Other Chefs</Button>
+                </Link>
               </div>
-
-              <p className="text-muted-foreground font-sans text-xs text-center">
-                Free to request • Pay after confirmation
-              </p>
-            </form>
+            )}
           </div>
         </div>
       </main>
@@ -405,4 +202,4 @@ const ChefProfile = () => {
   );
 };
 
-export default ChefProfile;
+export default ChefProfilePage;
