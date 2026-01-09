@@ -1,4 +1,4 @@
-import { User, Settings, HelpCircle, ShoppingCart, LogOut, Calendar } from "lucide-react";
+import { User, Settings, HelpCircle, ShoppingCart, LogOut, Calendar, ChefHat } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const Profile = () => {
   const { userLocation, setUserLocation } = useLocation();
-  const { user, signOut, loading } = useAuth();
+  const { user, signOut, loading, userRole } = useAuth();
   const { toast } = useToast();
 
   const handleSignOut = async () => {
@@ -54,6 +54,12 @@ const Profile = () => {
 
             {/* Menu Items */}
             <div className="space-y-2">
+              {userRole === 'chef' && (
+                <Link to="/chef-onboarding" className="w-full flex items-center gap-4 p-4 bg-card border border-border rounded-lg hover:border-primary/50 transition-colors text-left">
+                  <ChefHat className="w-5 h-5 text-muted-foreground" />
+                  <span className="font-sans">Chef Profile</span>
+                </Link>
+              )}
               <Link to="/reservations" className="w-full flex items-center gap-4 p-4 bg-card border border-border rounded-lg hover:border-primary/50 transition-colors text-left">
                 <Calendar className="w-5 h-5 text-muted-foreground" />
                 <span className="font-sans">My Reservations</span>
