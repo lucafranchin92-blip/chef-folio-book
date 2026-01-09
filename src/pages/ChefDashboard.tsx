@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
-import { Upload, X, ChefHat, Star, Users, Edit2, Save, Loader2 } from "lucide-react";
+import { Upload, X, ChefHat, Star, Users, Edit2, Save, Loader2, CalendarCheck } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
 import Footer from "@/components/Footer";
@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -22,6 +23,7 @@ import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import BookingRequestsList from "@/components/BookingRequestsList";
 
 const chefProfileSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters").max(100),
@@ -372,36 +374,9 @@ const ChefDashboard = () => {
       <Navbar />
 
       <main className="container mx-auto px-4 py-6 max-w-4xl">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-2xl font-serif mb-1">Chef Dashboard</h1>
-            <p className="text-muted-foreground">Manage your profile and availability</p>
-          </div>
-          {!isEditing ? (
-            <Button variant="outline" onClick={() => setIsEditing(true)}>
-              <Edit2 className="w-4 h-4 mr-2" />
-              Edit Profile
-            </Button>
-          ) : (
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={cancelEdit} disabled={isSaving}>
-                Cancel
-              </Button>
-              <Button variant="gold" onClick={handleSave} disabled={isSaving}>
-                {isSaving ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4 mr-2" />
-                    Save Changes
-                  </>
-                )}
-              </Button>
-            </div>
-          )}
+        <div className="mb-8">
+          <h1 className="text-2xl font-serif mb-1">Chef Dashboard</h1>
+          <p className="text-muted-foreground">Manage your bookings and profile</p>
         </div>
 
         {/* Stats Cards */}
@@ -447,222 +422,264 @@ const ChefDashboard = () => {
           </Card>
         </div>
 
-        {/* Profile Details */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Profile Details</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Profile Photo */}
-            <div className="flex items-center gap-6">
-              {isEditing ? (
-                <div className="flex items-center gap-4">
-                  {imagePreview ? (
-                    <div className="relative">
-                      <img
-                        src={imagePreview}
-                        alt="Preview"
-                        className="w-24 h-24 rounded-full object-cover border-2 border-primary"
-                      />
-                      <button
-                        type="button"
-                        onClick={removeImage}
-                        className="absolute -top-2 -right-2 p-1 bg-destructive text-destructive-foreground rounded-full"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="w-24 h-24 rounded-full border-2 border-dashed border-muted-foreground/50 flex flex-col items-center justify-center hover:border-primary transition-colors"
-                    >
-                      <Upload className="w-6 h-6 text-muted-foreground" />
-                      <span className="text-xs text-muted-foreground mt-1">Upload</span>
-                    </button>
-                  )}
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="hidden"
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    Upload a professional photo. Max 5MB.
-                  </p>
-                </div>
-              ) : (
-                <div className="flex items-center gap-4">
-                  {profile.imageUrl ? (
-                    <img
-                      src={profile.imageUrl}
-                      alt={profile.name}
-                      className="w-24 h-24 rounded-full object-cover border-2 border-border"
-                    />
-                  ) : (
-                    <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center">
-                      <ChefHat className="w-10 h-10 text-muted-foreground" />
-                    </div>
-                  )}
-                  <div>
-                    <h3 className="font-serif text-xl">{profile.name}</h3>
-                    <p className="text-muted-foreground">{profile.specialty}</p>
-                  </div>
-                </div>
-              )}
-            </div>
+        {/* Tabs for Requests and Profile */}
+        <Tabs defaultValue="requests" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="requests" className="flex items-center gap-2">
+              <CalendarCheck className="w-4 h-4" />
+              Booking Requests
+            </TabsTrigger>
+            <TabsTrigger value="profile">Profile Details</TabsTrigger>
+          </TabsList>
 
-            {isEditing ? (
-              /* Edit Mode */
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Display Name *</Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    />
-                    {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="specialty">Specialty *</Label>
-                    <Input
-                      id="specialty"
-                      value={formData.specialty}
-                      onChange={e => setFormData(prev => ({ ...prev, specialty: e.target.value }))}
-                    />
-                    {errors.specialty && <p className="text-sm text-destructive">{errors.specialty}</p>}
-                  </div>
-                </div>
+          <TabsContent value="requests">
+            <BookingRequestsList chefProfileId={profile.id} />
+          </TabsContent>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="location">Location *</Label>
-                    <Input
-                      id="location"
-                      value={formData.location}
-                      onChange={e => setFormData(prev => ({ ...prev, location: e.target.value }))}
-                    />
-                    {errors.location && <p className="text-sm text-destructive">{errors.location}</p>}
+          <TabsContent value="profile">
+            {/* Profile Details */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Profile Details</CardTitle>
+                {!isEditing ? (
+                  <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                    <Edit2 className="w-4 h-4 mr-2" />
+                    Edit
+                  </Button>
+                ) : (
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={cancelEdit} disabled={isSaving}>
+                      Cancel
+                    </Button>
+                    <Button variant="gold" size="sm" onClick={handleSave} disabled={isSaving}>
+                      {isSaving ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-4 h-4 mr-2" />
+                          Save
+                        </>
+                      )}
+                    </Button>
                   </div>
-                  <div className="space-y-2">
-                    <Label>Experience *</Label>
-                    <Select
-                      value={formData.experience}
-                      onValueChange={value => setFormData(prev => ({ ...prev, experience: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {experienceOptions.map(exp => (
-                          <SelectItem key={exp} value={exp}>{exp}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {errors.experience && <p className="text-sm text-destructive">{errors.experience}</p>}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Price Range *</Label>
-                  <Select
-                    value={formData.priceRange}
-                    onValueChange={value => setFormData(prev => ({ ...prev, priceRange: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {priceRangeOptions.map(option => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.priceRange && <p className="text-sm text-destructive">{errors.priceRange}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="description">About You *</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                    rows={4}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    {formData.description.length}/500 characters
-                  </p>
-                  {errors.description && <p className="text-sm text-destructive">{errors.description}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Cuisines *</Label>
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {formData.cuisines.map(cuisine => (
-                      <Badge key={cuisine} variant="secondary" className="gap-1">
-                        {cuisine}
-                        <button type="button" onClick={() => removeCuisine(cuisine)}>
-                          <X className="w-3 h-3" />
+                )}
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Profile Photo */}
+                <div className="flex items-center gap-6">
+                  {isEditing ? (
+                    <div className="flex items-center gap-4">
+                      {imagePreview ? (
+                        <div className="relative">
+                          <img
+                            src={imagePreview}
+                            alt="Preview"
+                            className="w-24 h-24 rounded-full object-cover border-2 border-primary"
+                          />
+                          <button
+                            type="button"
+                            onClick={removeImage}
+                            className="absolute -top-2 -right-2 p-1 bg-destructive text-destructive-foreground rounded-full"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="w-24 h-24 rounded-full border-2 border-dashed border-muted-foreground/50 flex flex-col items-center justify-center hover:border-primary transition-colors"
+                        >
+                          <Upload className="w-6 h-6 text-muted-foreground" />
+                          <span className="text-xs text-muted-foreground mt-1">Upload</span>
                         </button>
-                      </Badge>
-                    ))}
-                  </div>
-                  <Select value={newCuisine} onValueChange={addCuisine}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Add cuisine..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {cuisineOptions
-                        .filter(c => !formData.cuisines.includes(c))
-                        .map(cuisine => (
-                          <SelectItem key={cuisine} value={cuisine}>{cuisine}</SelectItem>
+                      )}
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="hidden"
+                      />
+                      <p className="text-sm text-muted-foreground">
+                        Upload a professional photo. Max 5MB.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-4">
+                      {profile.imageUrl ? (
+                        <img
+                          src={profile.imageUrl}
+                          alt={profile.name}
+                          className="w-24 h-24 rounded-full object-cover border-2 border-border"
+                        />
+                      ) : (
+                        <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center">
+                          <ChefHat className="w-10 h-10 text-muted-foreground" />
+                        </div>
+                      )}
+                      <div>
+                        <h3 className="font-serif text-xl">{profile.name}</h3>
+                        <p className="text-muted-foreground">{profile.specialty}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {isEditing ? (
+                  /* Edit Mode */
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="name">Display Name *</Label>
+                        <Input
+                          id="name"
+                          value={formData.name}
+                          onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                        />
+                        {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="specialty">Specialty *</Label>
+                        <Input
+                          id="specialty"
+                          value={formData.specialty}
+                          onChange={e => setFormData(prev => ({ ...prev, specialty: e.target.value }))}
+                        />
+                        {errors.specialty && <p className="text-sm text-destructive">{errors.specialty}</p>}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="location">Location *</Label>
+                        <Input
+                          id="location"
+                          value={formData.location}
+                          onChange={e => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                        />
+                        {errors.location && <p className="text-sm text-destructive">{errors.location}</p>}
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Experience *</Label>
+                        <Select
+                          value={formData.experience}
+                          onValueChange={value => setFormData(prev => ({ ...prev, experience: value }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {experienceOptions.map(exp => (
+                              <SelectItem key={exp} value={exp}>{exp}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {errors.experience && <p className="text-sm text-destructive">{errors.experience}</p>}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Price Range *</Label>
+                      <Select
+                        value={formData.priceRange}
+                        onValueChange={value => setFormData(prev => ({ ...prev, priceRange: value }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {priceRangeOptions.map(option => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {errors.priceRange && <p className="text-sm text-destructive">{errors.priceRange}</p>}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="description">About You *</Label>
+                      <Textarea
+                        id="description"
+                        value={formData.description}
+                        onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                        rows={4}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {formData.description.length}/500 characters
+                      </p>
+                      {errors.description && <p className="text-sm text-destructive">{errors.description}</p>}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Cuisines *</Label>
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {formData.cuisines.map(cuisine => (
+                          <Badge key={cuisine} variant="secondary" className="gap-1">
+                            {cuisine}
+                            <button type="button" onClick={() => removeCuisine(cuisine)}>
+                              <X className="w-3 h-3" />
+                            </button>
+                          </Badge>
                         ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.cuisines && <p className="text-sm text-destructive">{errors.cuisines}</p>}
-                </div>
-              </div>
-            ) : (
-              /* View Mode */
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Location</p>
-                    <p className="font-medium">{profile.location}</p>
+                      </div>
+                      <Select value={newCuisine} onValueChange={addCuisine}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Add cuisine..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {cuisineOptions
+                            .filter(c => !formData.cuisines.includes(c))
+                            .map(cuisine => (
+                              <SelectItem key={cuisine} value={cuisine}>{cuisine}</SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                      {errors.cuisines && <p className="text-sm text-destructive">{errors.cuisines}</p>}
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Experience</p>
-                    <p className="font-medium">{profile.experience}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Price Range</p>
-                    <p className="font-medium">{profile.priceRange}</p>
-                  </div>
-                </div>
+                ) : (
+                  /* View Mode */
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Location</p>
+                        <p className="font-medium">{profile.location}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Experience</p>
+                        <p className="font-medium">{profile.experience}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Price Range</p>
+                        <p className="font-medium">{profile.priceRange}</p>
+                      </div>
+                    </div>
 
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">About</p>
-                  <p>{profile.description}</p>
-                </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">About</p>
+                      <p>{profile.description}</p>
+                    </div>
 
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">Cuisines</p>
-                  <div className="flex flex-wrap gap-2">
-                    {profile.cuisines.map(cuisine => (
-                      <Badge key={cuisine} variant="secondary">{cuisine}</Badge>
-                    ))}
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-2">Cuisines</p>
+                      <div className="flex flex-wrap gap-2">
+                        {profile.cuisines.map(cuisine => (
+                          <Badge key={cuisine} variant="secondary">{cuisine}</Badge>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </main>
 
       <Footer />
