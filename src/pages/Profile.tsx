@@ -55,9 +55,9 @@ const Profile = () => {
             {/* Menu Items */}
             <div className="space-y-2">
               {userRole === 'chef' && (
-                <Link to="/chef-onboarding" className="w-full flex items-center gap-4 p-4 bg-card border border-border rounded-lg hover:border-primary/50 transition-colors text-left">
+                <Link to="/chef-dashboard" className="w-full flex items-center gap-4 p-4 bg-card border border-border rounded-lg hover:border-primary/50 transition-colors text-left">
                   <ChefHat className="w-5 h-5 text-muted-foreground" />
-                  <span className="font-sans">Chef Profile</span>
+                  <span className="font-sans">Chef Dashboard</span>
                 </Link>
               )}
               <Link to="/reservations" className="w-full flex items-center gap-4 p-4 bg-card border border-border rounded-lg hover:border-primary/50 transition-colors text-left">
