@@ -10,6 +10,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import ChefProfile from "./pages/ChefProfile";
 import ChefOnboarding from "./pages/ChefOnboarding";
+import ChefDashboard from "./pages/ChefDashboard";
 import Reservations from "./pages/Reservations";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
@@ -36,6 +37,14 @@ const App = () => (
                   element={
                     <ProtectedRoute>
                       <ChefOnboarding />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/chef-dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <ChefDashboard />
                     </ProtectedRoute>
                   }
                 />
