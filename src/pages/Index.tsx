@@ -4,6 +4,7 @@ import BottomNav from "@/components/BottomNav";
 import Footer from "@/components/Footer";
 import ChefCard from "@/components/ChefCard";
 import SearchFilters from "@/components/SearchFilters";
+import FeaturedChefs from "@/components/FeaturedChefs";
 import { ChefHat } from "lucide-react";
 import { useLocation } from "@/contexts/LocationContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -129,6 +130,11 @@ const Index = () => {
             Book world-class chefs for unforgettable dining experiences in your home
           </p>
         </div>
+
+        {/* Featured Chefs */}
+        {!loading && !searchQuery && !selectedCuisine && !selectedCity && (
+          <FeaturedChefs chefs={chefs} />
+        )}
 
         {/* Search & Filters */}
         <div className="mb-8">
