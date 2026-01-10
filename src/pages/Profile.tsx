@@ -1,4 +1,4 @@
-import { User, Settings, HelpCircle, ShoppingCart, LogOut, Calendar, ChefHat } from "lucide-react";
+import { User, Settings, HelpCircle, ShoppingCart, LogOut, Calendar, ChefHat, ClipboardList } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
@@ -60,6 +60,10 @@ const Profile = () => {
                   <span className="font-sans">Chef Dashboard</span>
                 </Link>
               )}
+              <Link to="/my-bookings" className="w-full flex items-center gap-4 p-4 bg-card border border-border rounded-lg hover:border-primary/50 transition-colors text-left">
+                <ClipboardList className="w-5 h-5 text-muted-foreground" />
+                <span className="font-sans">My Bookings</span>
+              </Link>
               <Link to="/reservations" className="w-full flex items-center gap-4 p-4 bg-card border border-border rounded-lg hover:border-primary/50 transition-colors text-left">
                 <Calendar className="w-5 h-5 text-muted-foreground" />
                 <span className="font-sans">My Reservations</span>
