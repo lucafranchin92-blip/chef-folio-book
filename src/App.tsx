@@ -12,6 +12,7 @@ import ChefProfile from "./pages/ChefProfile";
 import ChefOnboarding from "./pages/ChefOnboarding";
 import ChefDashboard from "./pages/ChefDashboard";
 import Reservations from "./pages/Reservations";
+import MyBookings from "./pages/MyBookings";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Profile from "./pages/Profile";
@@ -54,6 +55,14 @@ const App = () => (
                   element={
                     <ProtectedRoute>
                       <Reservations />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/my-bookings"
+                  element={
+                    <ProtectedRoute>
+                      <MyBookings />
                     </ProtectedRoute>
                   }
                 />
