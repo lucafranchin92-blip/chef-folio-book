@@ -1,12 +1,14 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
 import Footer from "@/components/Footer";
 import ChefCard from "@/components/ChefCard";
 import SearchFilters from "@/components/SearchFilters";
-import { chefs } from "@/data/chefs";
 import { ChefHat } from "lucide-react";
 import { useLocation } from "@/contexts/LocationContext";
+import { supabase } from "@/integrations/supabase/client";
+import { Chef } from "@/types/chef";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Simple location matching - checks if locations share city/state keywords
 const getLocationScore = (chefLocation: string, userLocation: string): number => {
@@ -28,7 +30,39 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCuisine, setSelectedCuisine] = useState<string | null>(null);
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
+  const [chefs, setChefs] = useState<Chef[]>([]);
+  const [loading, setLoading] = useState(true);
   const { userLocation } = useLocation();
+
+  useEffect(() => {
+    fetchChefs();
+  }, []);
+
+  const fetchChefs = async () => {
+    const { data, error } = await supabase
+      .from("chef_profiles")
+      .select("*")
+      .order("rating", { ascending: false });
+
+    if (!error && data) {
+      const mappedChefs: Chef[] = data.map((profile) => ({
+        id: profile.id,
+        name: profile.name,
+        specialty: profile.specialty,
+        image: profile.image_url || "/placeholder.svg",
+        rating: profile.rating || 0,
+        reviewCount: profile.review_count || 0,
+        priceRange: profile.price_range,
+        location: profile.location,
+        experience: profile.experience,
+        description: profile.description,
+        cuisines: profile.cuisines,
+        available: profile.available ?? true,
+      }));
+      setChefs(mappedChefs);
+    }
+    setLoading(false);
+  };
 
   const filteredChefs = useMemo(() => {
     const filtered = chefs.filter((chef) => {
@@ -56,7 +90,7 @@ const Index = () => {
     }
 
     return filtered;
-  }, [searchQuery, selectedCuisine, selectedCity, userLocation]);
+  }, [chefs, searchQuery, selectedCuisine, selectedCity, userLocation]);
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
@@ -91,12 +125,30 @@ const Index = () => {
         {/* Results Count */}
         <div className="flex items-center justify-between mb-4">
           <p className="text-muted-foreground font-sans text-sm">
-            {filteredChefs.length} chef{filteredChefs.length !== 1 ? "s" : ""} available
+            {loading ? "Loading..." : `${filteredChefs.length} chef${filteredChefs.length !== 1 ? "s" : ""} available`}
           </p>
         </div>
 
         {/* Chef Grid */}
-        {filteredChefs.length > 0 ? (
+        {loading ? (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="bg-card border border-border rounded-xl overflow-hidden">
+                <Skeleton className="aspect-[4/3] w-full" />
+                <div className="p-4 space-y-3">
+                  <Skeleton className="h-5 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                  <Skeleton className="h-4 w-full" />
+                  <div className="flex gap-2">
+                    <Skeleton className="h-6 w-16" />
+                    <Skeleton className="h-6 w-16" />
+                  </div>
+                  <Skeleton className="h-9 w-full" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : filteredChefs.length > 0 ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredChefs.map((chef) => (
               <ChefCard key={chef.id} chef={chef} />
@@ -104,7 +156,13 @@ const Index = () => {
           </div>
         ) : (
           <div className="text-center py-12">
-            <p className="text-muted-foreground font-sans">No chefs found matching your criteria</p>
+            <ChefHat className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+            <p className="text-muted-foreground font-sans mb-2">No chefs found matching your criteria</p>
+            <p className="text-sm text-muted-foreground">
+              {chefs.length === 0 
+                ? "Be the first chef to join our marketplace!" 
+                : "Try adjusting your search or filters"}
+            </p>
           </div>
         )}
       </main>
