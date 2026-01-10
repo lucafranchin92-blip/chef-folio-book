@@ -36,6 +36,26 @@ const Index = () => {
 
   useEffect(() => {
     fetchChefs();
+
+    // Subscribe to real-time updates
+    const channel = supabase
+      .channel('chef_profiles_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'chef_profiles'
+        },
+        () => {
+          fetchChefs();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchChefs = async () => {
