@@ -44,6 +44,27 @@ const MyBookings = () => {
 
     if (user) {
       fetchBookings();
+
+      // Subscribe to real-time updates for this buyer's bookings
+      const channel = supabase
+        .channel('my_bookings_changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'booking_requests',
+            filter: `buyer_id=eq.${user.id}`
+          },
+          () => {
+            fetchBookings();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [user, authLoading, navigate]);
 
