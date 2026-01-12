@@ -151,6 +151,51 @@ export type Database = {
         }
         Relationships: []
       }
+      reviews: {
+        Row: {
+          booking_id: string | null
+          buyer_id: string
+          chef_id: string
+          comment: string | null
+          created_at: string
+          id: string
+          rating: number
+        }
+        Insert: {
+          booking_id?: string | null
+          buyer_id: string
+          chef_id: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating: number
+        }
+        Update: {
+          booking_id?: string | null
+          buyer_id?: string
+          chef_id?: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: true
+            referencedRelation: "booking_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_chef_id_fkey"
+            columns: ["chef_id"]
+            isOneToOne: false
+            referencedRelation: "chef_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
