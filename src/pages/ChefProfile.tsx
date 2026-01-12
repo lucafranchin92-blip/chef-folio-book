@@ -3,8 +3,10 @@ import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Star, MapPin, Clock, Loader2, ChefHat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import BottomNav from "@/components/BottomNav";
 import BookingRequestForm from "@/components/BookingRequestForm";
+import ReviewsList from "@/components/ReviewsList";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ChefProfile {
@@ -164,6 +166,14 @@ const ChefProfilePage = () => {
                     : "Currently unavailable"}
                 </span>
               </div>
+            </div>
+
+            {/* Reviews Section */}
+            <div className="mt-8">
+              <h3 className="font-serif text-lg text-foreground mb-4">
+                Reviews ({chef.review_count || 0})
+              </h3>
+              <ReviewsList chefId={chef.id} />
             </div>
           </div>
 

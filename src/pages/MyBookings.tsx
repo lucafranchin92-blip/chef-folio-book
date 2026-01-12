@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Calendar, Clock, Users, ChefHat, MessageSquare } from "lucide-react";
+import { Calendar, Clock, Users, ChefHat, MessageSquare, Star } from "lucide-react";
 import { format } from "date-fns";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -9,8 +9,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import ReviewForm from "@/components/ReviewForm";
 
 interface BookingWithChef {
   id: string;
@@ -35,6 +37,8 @@ const MyBookings = () => {
   const navigate = useNavigate();
   const [bookings, setBookings] = useState<BookingWithChef[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reviewedBookings, setReviewedBookings] = useState<Set<string>>(new Set());
+  const [reviewDialogOpen, setReviewDialogOpen] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -84,8 +88,26 @@ const MyBookings = () => {
 
     if (!error && data) {
       setBookings(data as BookingWithChef[]);
+      
+      // Check which bookings have been reviewed
+      const bookingIds = data.map((b) => b.id);
+      if (bookingIds.length > 0) {
+        const { data: reviews } = await supabase
+          .from("reviews")
+          .select("booking_id")
+          .in("booking_id", bookingIds);
+        
+        if (reviews) {
+          setReviewedBookings(new Set(reviews.map((r) => r.booking_id).filter(Boolean) as string[]));
+        }
+      }
     }
     setLoading(false);
+  };
+
+  const handleReviewSuccess = (bookingId: string) => {
+    setReviewedBookings((prev) => new Set([...prev, bookingId]));
+    setReviewDialogOpen(null);
   };
 
   const getStatusBadge = (status: string) => {
@@ -205,9 +227,39 @@ const MyBookings = () => {
                     </div>
                   )}
 
-                  <p className="text-xs text-muted-foreground">
-                    Requested on {format(new Date(booking.created_at), "MMM d, yyyy 'at' h:mm a")}
-                  </p>
+                  <div className="flex items-center justify-between pt-2">
+                    <p className="text-xs text-muted-foreground">
+                      Requested on {format(new Date(booking.created_at), "MMM d, yyyy 'at' h:mm a")}
+                    </p>
+                    
+                    {booking.status === "accepted" && !reviewedBookings.has(booking.id) && (
+                      <Dialog open={reviewDialogOpen === booking.id} onOpenChange={(open) => setReviewDialogOpen(open ? booking.id : null)}>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm" className="gap-1">
+                            <Star className="h-4 w-4" />
+                            Leave Review
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Review {booking.chef_profiles?.name}</DialogTitle>
+                          </DialogHeader>
+                          <ReviewForm
+                            chefId={booking.chef_id}
+                            bookingId={booking.id}
+                            onSuccess={() => handleReviewSuccess(booking.id)}
+                          />
+                        </DialogContent>
+                      </Dialog>
+                    )}
+                    
+                    {reviewedBookings.has(booking.id) && (
+                      <Badge variant="outline" className="gap-1">
+                        <Star className="h-3 w-3 fill-primary text-primary" />
+                        Reviewed
+                      </Badge>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             ))}
