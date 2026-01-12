@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
-import { Upload, X, ChefHat, Star, Users, Edit2, Save, Loader2, CalendarCheck } from "lucide-react";
+import { Upload, X, ChefHat, Star, Users, Edit2, Save, Loader2, CalendarCheck, MessageSquare } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
 import Footer from "@/components/Footer";
@@ -24,6 +24,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import BookingRequestsList from "@/components/BookingRequestsList";
+import ChefReviewsManager from "@/components/ChefReviewsManager";
 
 const chefProfileSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters").max(100),
@@ -422,18 +423,26 @@ const ChefDashboard = () => {
           </Card>
         </div>
 
-        {/* Tabs for Requests and Profile */}
+        {/* Tabs for Requests, Reviews, and Profile */}
         <Tabs defaultValue="requests" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="requests" className="flex items-center gap-2">
               <CalendarCheck className="w-4 h-4" />
-              Booking Requests
+              Bookings
             </TabsTrigger>
-            <TabsTrigger value="profile">Profile Details</TabsTrigger>
+            <TabsTrigger value="reviews" className="flex items-center gap-2">
+              <MessageSquare className="w-4 h-4" />
+              Reviews
+            </TabsTrigger>
+            <TabsTrigger value="profile">Profile</TabsTrigger>
           </TabsList>
 
           <TabsContent value="requests">
             <BookingRequestsList chefProfileId={profile.id} />
+          </TabsContent>
+
+          <TabsContent value="reviews">
+            <ChefReviewsManager chefId={profile.id} />
           </TabsContent>
 
           <TabsContent value="profile">

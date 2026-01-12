@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Star, User } from "lucide-react";
+import { Star, User, ChefHat } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 
@@ -9,6 +9,8 @@ interface Review {
   comment: string | null;
   created_at: string;
   buyer_id: string;
+  chef_reply: string | null;
+  chef_reply_at: string | null;
 }
 
 interface ReviewsListProps {
@@ -112,6 +114,22 @@ const ReviewsList = ({ chefId }: ReviewsListProps) => {
           </div>
           {review.comment && (
             <p className="text-sm text-foreground">{review.comment}</p>
+          )}
+          
+          {/* Chef Reply */}
+          {review.chef_reply && (
+            <div className="mt-3 ml-4 pl-4 border-l-2 border-primary/30">
+              <div className="flex items-center gap-2 mb-1">
+                <ChefHat className="w-4 h-4 text-primary" />
+                <span className="text-xs font-medium text-primary">Chef's Response</span>
+                {review.chef_reply_at && (
+                  <span className="text-xs text-muted-foreground">
+                    • {format(new Date(review.chef_reply_at), "MMM d, yyyy")}
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground">{review.chef_reply}</p>
+            </div>
           )}
         </div>
       ))}

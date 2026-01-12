@@ -156,6 +156,8 @@ export type Database = {
           booking_id: string | null
           buyer_id: string
           chef_id: string
+          chef_reply: string | null
+          chef_reply_at: string | null
           comment: string | null
           created_at: string
           id: string
@@ -165,6 +167,8 @@ export type Database = {
           booking_id?: string | null
           buyer_id: string
           chef_id: string
+          chef_reply?: string | null
+          chef_reply_at?: string | null
           comment?: string | null
           created_at?: string
           id?: string
@@ -174,6 +178,8 @@ export type Database = {
           booking_id?: string | null
           buyer_id?: string
           chef_id?: string
+          chef_reply?: string | null
+          chef_reply_at?: string | null
           comment?: string | null
           created_at?: string
           id?: string
