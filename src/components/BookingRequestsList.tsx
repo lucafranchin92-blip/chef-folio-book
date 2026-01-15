@@ -1,10 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { format } from "date-fns";
-import { Calendar, Clock, Users, PartyPopper, Check, X, MessageSquare, Loader2 } from "lucide-react";
+import { Calendar, Clock, Users, PartyPopper, Check, X, MessageSquare, Loader2, Search, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -40,6 +48,11 @@ const BookingRequestsList = ({ chefProfileId }: BookingRequestsListProps) => {
   const [respondingTo, setRespondingTo] = useState<BookingRequest | null>(null);
   const [responseMessage, setResponseMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Filter states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [dateFilter, setDateFilter] = useState("");
 
   useEffect(() => {
     fetchRequests();
@@ -125,8 +138,46 @@ const BookingRequestsList = ({ chefProfileId }: BookingRequestsListProps) => {
     }
   };
 
-  const pendingRequests = requests.filter((r) => r.status === "pending");
-  const pastRequests = requests.filter((r) => r.status !== "pending");
+  // Filter requests based on search and filters
+  const filteredRequests = useMemo(() => {
+    return requests.filter((request) => {
+      // Status filter
+      if (statusFilter !== "all" && request.status !== statusFilter) {
+        return false;
+      }
+      
+      // Date filter
+      if (dateFilter && request.event_date !== dateFilter) {
+        return false;
+      }
+      
+      // Search query - search in event type, message, guest count
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchesEventType = request.event_type.toLowerCase().includes(query);
+        const matchesMessage = request.message?.toLowerCase().includes(query) || false;
+        const matchesGuestCount = request.guest_count.toString().includes(query);
+        const matchesDate = format(new Date(request.event_date), "MMM d, yyyy").toLowerCase().includes(query);
+        
+        if (!matchesEventType && !matchesMessage && !matchesGuestCount && !matchesDate) {
+          return false;
+        }
+      }
+      
+      return true;
+    });
+  }, [requests, searchQuery, statusFilter, dateFilter]);
+
+  const pendingRequests = filteredRequests.filter((r) => r.status === "pending");
+  const pastRequests = filteredRequests.filter((r) => r.status !== "pending");
+  
+  const clearFilters = () => {
+    setSearchQuery("");
+    setStatusFilter("all");
+    setDateFilter("");
+  };
+
+  const hasActiveFilters = searchQuery || statusFilter !== "all" || dateFilter;
 
   if (isLoading) {
     return (
@@ -138,6 +189,62 @@ const BookingRequestsList = ({ chefProfileId }: BookingRequestsListProps) => {
 
   return (
     <div className="space-y-6">
+      {/* Search and Filters */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-muted-foreground" />
+              <span className="font-medium text-sm">Filter Bookings</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {/* Search Input */}
+              <div className="relative md:col-span-2">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by event type, date, or guests..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              
+              {/* Status Filter */}
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="accepted">Accepted</SelectItem>
+                  <SelectItem value="declined">Declined</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              {/* Date Filter */}
+              <Input
+                type="date"
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                className="w-full"
+              />
+            </div>
+            
+            {hasActiveFilters && (
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Showing {filteredRequests.length} of {requests.length} requests
+                </p>
+                <Button variant="ghost" size="sm" onClick={clearFilters}>
+                  Clear Filters
+                </Button>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Pending Requests */}
       <div>
         <h3 className="font-serif text-lg mb-4">
