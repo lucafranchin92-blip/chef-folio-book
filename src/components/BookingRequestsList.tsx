@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { format } from "date-fns";
-import { Calendar, Clock, Users, PartyPopper, Check, X, MessageSquare, Loader2, Search, Filter } from "lucide-react";
+import { Calendar, Clock, Users, PartyPopper, Check, X, MessageSquare, Loader2, Search, Filter, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -53,6 +53,7 @@ const BookingRequestsList = ({ chefProfileId }: BookingRequestsListProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [dateFilter, setDateFilter] = useState("");
+  const [sortBy, setSortBy] = useState<string>("created_desc");
 
   useEffect(() => {
     fetchRequests();
@@ -138,9 +139,9 @@ const BookingRequestsList = ({ chefProfileId }: BookingRequestsListProps) => {
     }
   };
 
-  // Filter requests based on search and filters
+  // Filter and sort requests
   const filteredRequests = useMemo(() => {
-    return requests.filter((request) => {
+    let filtered = requests.filter((request) => {
       // Status filter
       if (statusFilter !== "all" && request.status !== statusFilter) {
         return false;
@@ -166,7 +167,28 @@ const BookingRequestsList = ({ chefProfileId }: BookingRequestsListProps) => {
       
       return true;
     });
-  }, [requests, searchQuery, statusFilter, dateFilter]);
+
+    // Sort filtered results
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case "date_asc":
+          return new Date(a.event_date).getTime() - new Date(b.event_date).getTime();
+        case "date_desc":
+          return new Date(b.event_date).getTime() - new Date(a.event_date).getTime();
+        case "guests_asc":
+          return a.guest_count - b.guest_count;
+        case "guests_desc":
+          return b.guest_count - a.guest_count;
+        case "created_asc":
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        case "created_desc":
+        default:
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+    });
+
+    return filtered;
+  }, [requests, searchQuery, statusFilter, dateFilter, sortBy]);
 
   const pendingRequests = filteredRequests.filter((r) => r.status === "pending");
   const pastRequests = filteredRequests.filter((r) => r.status !== "pending");
@@ -175,9 +197,10 @@ const BookingRequestsList = ({ chefProfileId }: BookingRequestsListProps) => {
     setSearchQuery("");
     setStatusFilter("all");
     setDateFilter("");
+    setSortBy("created_desc");
   };
 
-  const hasActiveFilters = searchQuery || statusFilter !== "all" || dateFilter;
+  const hasActiveFilters = searchQuery || statusFilter !== "all" || dateFilter || sortBy !== "created_desc";
 
   if (isLoading) {
     return (
@@ -197,7 +220,7 @@ const BookingRequestsList = ({ chefProfileId }: BookingRequestsListProps) => {
               <Filter className="w-4 h-4 text-muted-foreground" />
               <span className="font-medium text-sm">Filter Bookings</span>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               {/* Search Input */}
               <div className="relative md:col-span-2">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -229,6 +252,22 @@ const BookingRequestsList = ({ chefProfileId }: BookingRequestsListProps) => {
                 onChange={(e) => setDateFilter(e.target.value)}
                 className="w-full"
               />
+
+              {/* Sort By */}
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger>
+                  <ArrowUpDown className="w-4 h-4 mr-2" />
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="created_desc">Newest First</SelectItem>
+                  <SelectItem value="created_asc">Oldest First</SelectItem>
+                  <SelectItem value="date_asc">Event Date (Earliest)</SelectItem>
+                  <SelectItem value="date_desc">Event Date (Latest)</SelectItem>
+                  <SelectItem value="guests_desc">Most Guests</SelectItem>
+                  <SelectItem value="guests_asc">Fewest Guests</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             
             {hasActiveFilters && (
