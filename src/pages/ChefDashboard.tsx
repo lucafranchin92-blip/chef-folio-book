@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
-import { Upload, X, ChefHat, Star, Users, Edit2, Save, Loader2, CalendarCheck, MessageSquare } from "lucide-react";
+import { Upload, X, ChefHat, Star, Users, Edit2, Save, Loader2, CalendarCheck, MessageSquare, CalendarDays } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
 import Footer from "@/components/Footer";
@@ -25,6 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import BookingRequestsList from "@/components/BookingRequestsList";
 import ChefReviewsManager from "@/components/ChefReviewsManager";
+import BookingCalendarView from "@/components/BookingCalendarView";
 
 const chefProfileSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters").max(100),
@@ -425,20 +426,28 @@ const ChefDashboard = () => {
 
         {/* Tabs for Requests, Reviews, and Profile */}
         <Tabs defaultValue="requests" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="requests" className="flex items-center gap-2">
               <CalendarCheck className="w-4 h-4" />
-              Bookings
+              <span className="hidden sm:inline">Bookings</span>
+            </TabsTrigger>
+            <TabsTrigger value="calendar" className="flex items-center gap-2">
+              <CalendarDays className="w-4 h-4" />
+              <span className="hidden sm:inline">Calendar</span>
             </TabsTrigger>
             <TabsTrigger value="reviews" className="flex items-center gap-2">
               <MessageSquare className="w-4 h-4" />
-              Reviews
+              <span className="hidden sm:inline">Reviews</span>
             </TabsTrigger>
             <TabsTrigger value="profile">Profile</TabsTrigger>
           </TabsList>
 
           <TabsContent value="requests">
             <BookingRequestsList chefProfileId={profile.id} />
+          </TabsContent>
+
+          <TabsContent value="calendar">
+            <BookingCalendarView chefProfileId={profile.id} />
           </TabsContent>
 
           <TabsContent value="reviews">
