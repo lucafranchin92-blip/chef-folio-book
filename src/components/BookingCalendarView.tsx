@@ -48,7 +48,9 @@ const BookingCalendarView = ({ chefProfileId }: BookingCalendarViewProps) => {
       if (error) throw error;
       setBookings(data || []);
     } catch (error) {
-      console.error("Error fetching bookings:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error fetching bookings:", error);
+      }
       toast({
         title: "Error",
         description: "Failed to load bookings.",

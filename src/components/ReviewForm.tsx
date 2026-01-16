@@ -44,7 +44,9 @@ const ReviewForm = ({ chefId, bookingId, onSuccess }: ReviewFormProps) => {
       toast.success("Review submitted successfully!");
       onSuccess();
     } catch (error: any) {
-      console.error("Error submitting review:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error submitting review:", error);
+      }
       toast.error(error.message || "Failed to submit review");
     } finally {
       setIsSubmitting(false);

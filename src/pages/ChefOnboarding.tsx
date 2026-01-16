@@ -201,7 +201,9 @@ const ChefOnboarding = () => {
 
       navigate("/profile");
     } catch (error: any) {
-      console.error("Error creating profile:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error creating profile:", error);
+      }
       toast({
         title: "Error",
         description: error.message || "Failed to create profile. Please try again.",

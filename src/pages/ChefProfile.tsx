@@ -46,7 +46,9 @@ const ChefProfilePage = () => {
       if (error) throw error;
       setChef(data);
     } catch (error) {
-      console.error("Error fetching chef:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error fetching chef:", error);
+      }
     } finally {
       setIsLoading(false);
     }

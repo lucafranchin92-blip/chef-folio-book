@@ -88,7 +88,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .insert({ user_id: data.user.id, role });
       
       if (roleError) {
-        console.error("Failed to assign role:", roleError);
+        if (import.meta.env.DEV) {
+          console.error("Failed to assign role:", roleError);
+        }
       } else {
         setUserRole(role);
       }

@@ -138,7 +138,9 @@ const ChefDashboard = () => {
         setImagePreview(profileData.imageUrl);
       }
     } catch (error) {
-      console.error("Error fetching profile:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error fetching profile:", error);
+      }
       toast({
         title: "Error",
         description: "Failed to load your profile.",
@@ -211,7 +213,9 @@ const ChefDashboard = () => {
           : "You won't appear in search results.",
       });
     } catch (error) {
-      console.error("Error updating availability:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error updating availability:", error);
+      }
       toast({
         title: "Error",
         description: "Failed to update availability.",
@@ -288,7 +292,9 @@ const ChefDashboard = () => {
         description: "Your changes have been saved.",
       });
     } catch (error: any) {
-      console.error("Error updating profile:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error updating profile:", error);
+      }
       toast({
         title: "Error",
         description: error.message || "Failed to save changes.",
