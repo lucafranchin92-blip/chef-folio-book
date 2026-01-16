@@ -55,7 +55,9 @@ const ReviewsList = ({ chefId }: ReviewsListProps) => {
       if (error) throw error;
       setReviews(data || []);
     } catch (error) {
-      console.error("Error fetching reviews:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error fetching reviews:", error);
+      }
     } finally {
       setIsLoading(false);
     }

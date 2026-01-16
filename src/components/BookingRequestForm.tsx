@@ -130,7 +130,9 @@ const BookingRequestForm = ({ chefId, chefName }: BookingRequestFormProps) => {
         message: "",
       });
     } catch (error: any) {
-      console.error("Error submitting booking:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error submitting booking:", error);
+      }
       toast({
         title: "Error",
         description: error.message || "Failed to send request. Please try again.",

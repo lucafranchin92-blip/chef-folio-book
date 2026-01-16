@@ -61,7 +61,9 @@ const ChefReviewsManager = ({ chefId }: ChefReviewsManagerProps) => {
       if (error) throw error;
       setReviews(data || []);
     } catch (error) {
-      console.error("Error fetching reviews:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error fetching reviews:", error);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -87,7 +89,9 @@ const ChefReviewsManager = ({ chefId }: ChefReviewsManagerProps) => {
       setReplyText("");
       fetchReviews();
     } catch (error: any) {
-      console.error("Error posting reply:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error posting reply:", error);
+      }
       toast.error(error.message || "Failed to post reply");
     } finally {
       setIsSubmitting(false);

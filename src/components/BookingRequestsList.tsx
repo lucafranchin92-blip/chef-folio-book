@@ -70,7 +70,9 @@ const BookingRequestsList = ({ chefProfileId }: BookingRequestsListProps) => {
       if (error) throw error;
       setRequests(data || []);
     } catch (error) {
-      console.error("Error fetching requests:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error fetching requests:", error);
+      }
       toast({
         title: "Error",
         description: "Failed to load booking requests.",
@@ -115,7 +117,9 @@ const BookingRequestsList = ({ chefProfileId }: BookingRequestsListProps) => {
       setRespondingTo(null);
       setResponseMessage("");
     } catch (error: any) {
-      console.error("Error responding to request:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error responding to request:", error);
+      }
       toast({
         title: "Error",
         description: "Failed to respond to request.",
