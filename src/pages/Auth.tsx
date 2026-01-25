@@ -6,7 +6,26 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
+
+const checkRateLimit = async (email: string, attemptType: "login" | "signup"): Promise<{ allowed: boolean; retryAfter?: number }> => {
+  try {
+    const { data, error } = await supabase.functions.invoke("check-rate-limit", {
+      body: { identifier: email, attemptType },
+    });
+    
+    if (error) {
+      // Fail open - allow request if rate limiting fails
+      return { allowed: true };
+    }
+    
+    return data;
+  } catch {
+    // Fail open - allow request if rate limiting fails
+    return { allowed: true };
+  }
+};
 
 const emailSchema = z.string().email("Please enter a valid email address");
 const passwordSchema = z.string().min(6, "Password must be at least 6 characters");
@@ -65,6 +84,20 @@ const Auth = () => {
     setIsSubmitting(true);
 
     try {
+      // Check rate limit before attempting auth
+      const rateLimitCheck = await checkRateLimit(email, isLogin ? "login" : "signup");
+      
+      if (!rateLimitCheck.allowed) {
+        const minutes = Math.ceil((rateLimitCheck.retryAfter || 900) / 60);
+        toast({
+          title: "Too Many Attempts",
+          description: `Please wait ${minutes} minutes before trying again.`,
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
       if (isLogin) {
         const { error } = await signIn(email, password);
         if (error) {
