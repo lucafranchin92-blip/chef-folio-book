@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
+import ForgotPasswordForm from "@/components/ForgotPasswordForm";
 
 const checkRateLimit = async (email: string, attemptType: "login" | "signup"): Promise<{ allowed: boolean; retryAfter?: number }> => {
   try {
@@ -34,13 +35,14 @@ type UserRole = "buyer" | "chef";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [selectedRole, setSelectedRole] = useState<UserRole>("buyer");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string; fullName?: string }>({}); 
+  const [errors, setErrors] = useState<{ email?: string; password?: string; fullName?: string }>({});
   
   const { signIn, signUp, user, loading } = useAuth();
   const navigate = useNavigate();
@@ -171,166 +173,183 @@ const Auth = () => {
       <main className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-md">
           <div className="bg-card border border-border rounded-xl p-8 shadow-lg">
-            <div className="text-center mb-8">
-              <h1 className="font-serif text-2xl mb-2">
-                {isLogin ? "Welcome Back" : "Create Account"}
-              </h1>
-              <p className="text-muted-foreground font-sans text-sm">
-                {isLogin
-                  ? "Sign in to manage your reservations"
-                  : "Join us to book private chef experiences"}
-              </p>
-            </div>
+            {showForgotPassword ? (
+              <ForgotPasswordForm onBack={() => setShowForgotPassword(false)} />
+            ) : (
+              <>
+                <div className="text-center mb-8">
+                  <h1 className="font-serif text-2xl mb-2">
+                    {isLogin ? "Welcome Back" : "Create Account"}
+                  </h1>
+                  <p className="text-muted-foreground font-sans text-sm">
+                    {isLogin
+                      ? "Sign in to manage your reservations"
+                      : "Join us to book private chef experiences"}
+                  </p>
+                </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {!isLogin && (
-                <>
-                  {/* Role Selection */}
-                  <div>
-                    <Label className="font-sans mb-3 block">I want to join as</Label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setSelectedRole("buyer")}
-                        className={`p-4 rounded-lg border-2 transition-all flex flex-col items-center gap-2 ${
-                          selectedRole === "buyer"
-                            ? "border-primary bg-primary/5"
-                            : "border-border hover:border-muted-foreground"
-                        }`}
-                      >
-                        <User className={`w-6 h-6 ${selectedRole === "buyer" ? "text-primary" : "text-muted-foreground"}`} />
-                        <span className={`font-medium text-sm ${selectedRole === "buyer" ? "text-primary" : "text-foreground"}`}>
-                          Buyer
-                        </span>
-                        <span className="text-xs text-muted-foreground text-center">
-                          Book private chefs
-                        </span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setSelectedRole("chef")}
-                        className={`p-4 rounded-lg border-2 transition-all flex flex-col items-center gap-2 ${
-                          selectedRole === "chef"
-                            ? "border-primary bg-primary/5"
-                            : "border-border hover:border-muted-foreground"
-                        }`}
-                      >
-                        <UtensilsCrossed className={`w-6 h-6 ${selectedRole === "chef" ? "text-primary" : "text-muted-foreground"}`} />
-                        <span className={`font-medium text-sm ${selectedRole === "chef" ? "text-primary" : "text-foreground"}`}>
-                          Chef
-                        </span>
-                        <span className="text-xs text-muted-foreground text-center">
-                          Offer your services
-                        </span>
-                      </button>
-                    </div>
-                  </div>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  {!isLogin && (
+                    <>
+                      {/* Role Selection */}
+                      <div>
+                        <Label className="font-sans mb-3 block">I want to join as</Label>
+                        <div className="grid grid-cols-2 gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedRole("buyer")}
+                            className={`p-4 rounded-lg border-2 transition-all flex flex-col items-center gap-2 ${
+                              selectedRole === "buyer"
+                                ? "border-primary bg-primary/5"
+                                : "border-border hover:border-muted-foreground"
+                            }`}
+                          >
+                            <User className={`w-6 h-6 ${selectedRole === "buyer" ? "text-primary" : "text-muted-foreground"}`} />
+                            <span className={`font-medium text-sm ${selectedRole === "buyer" ? "text-primary" : "text-foreground"}`}>
+                              Buyer
+                            </span>
+                            <span className="text-xs text-muted-foreground text-center">
+                              Book private chefs
+                            </span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedRole("chef")}
+                            className={`p-4 rounded-lg border-2 transition-all flex flex-col items-center gap-2 ${
+                              selectedRole === "chef"
+                                ? "border-primary bg-primary/5"
+                                : "border-border hover:border-muted-foreground"
+                            }`}
+                          >
+                            <UtensilsCrossed className={`w-6 h-6 ${selectedRole === "chef" ? "text-primary" : "text-muted-foreground"}`} />
+                            <span className={`font-medium text-sm ${selectedRole === "chef" ? "text-primary" : "text-foreground"}`}>
+                              Chef
+                            </span>
+                            <span className="text-xs text-muted-foreground text-center">
+                              Offer your services
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="fullName" className="font-sans">Full Name</Label>
+                        <Input
+                          id="fullName"
+                          type="text"
+                          value={fullName}
+                          onChange={(e) => {
+                            setFullName(e.target.value);
+                            setErrors((prev) => ({ ...prev, fullName: undefined }));
+                          }}
+                          placeholder="John Doe"
+                          className={errors.fullName ? "border-destructive" : ""}
+                        />
+                        {errors.fullName && (
+                          <p className="text-destructive text-xs mt-1 flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3" />
+                            {errors.fullName}
+                          </p>
+                        )}
+                      </div>
+                    </>
+                  )}
 
                   <div>
-                    <Label htmlFor="fullName" className="font-sans">Full Name</Label>
+                    <Label htmlFor="email" className="font-sans">Email</Label>
                     <Input
-                      id="fullName"
-                      type="text"
-                      value={fullName}
+                      id="email"
+                      type="email"
+                      value={email}
                       onChange={(e) => {
-                        setFullName(e.target.value);
-                        setErrors((prev) => ({ ...prev, fullName: undefined }));
+                        setEmail(e.target.value);
+                        setErrors((prev) => ({ ...prev, email: undefined }));
                       }}
-                      placeholder="John Doe"
-                      className={errors.fullName ? "border-destructive" : ""}
+                      placeholder="you@example.com"
+                      className={errors.email ? "border-destructive" : ""}
                     />
-                    {errors.fullName && (
+                    {errors.email && (
                       <p className="text-destructive text-xs mt-1 flex items-center gap-1">
                         <AlertCircle className="w-3 h-3" />
-                        {errors.fullName}
+                        {errors.email}
                       </p>
                     )}
                   </div>
-                </>
-              )}
 
-              <div>
-                <Label htmlFor="email" className="font-sans">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    setErrors((prev) => ({ ...prev, email: undefined }));
-                  }}
-                  placeholder="you@example.com"
-                  className={errors.email ? "border-destructive" : ""}
-                />
-                {errors.email && (
-                  <p className="text-destructive text-xs mt-1 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />
-                    {errors.email}
-                  </p>
-                )}
-              </div>
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="password" className="font-sans">Password</Label>
+                      {isLogin && (
+                        <button
+                          type="button"
+                          onClick={() => setShowForgotPassword(true)}
+                          className="text-xs text-primary hover:text-primary/80 transition-colors"
+                        >
+                          Forgot password?
+                        </button>
+                      )}
+                    </div>
+                    <div className="relative">
+                      <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => {
+                          setPassword(e.target.value);
+                          setErrors((prev) => ({ ...prev, password: undefined }));
+                        }}
+                        placeholder="••••••••"
+                        className={errors.password ? "border-destructive pr-10" : "pr-10"}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    {errors.password && (
+                      <p className="text-destructive text-xs mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" />
+                        {errors.password}
+                      </p>
+                    )}
+                  </div>
 
-              <div>
-                <Label htmlFor="password" className="font-sans">Password</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value);
-                      setErrors((prev) => ({ ...prev, password: undefined }));
-                    }}
-                    placeholder="••••••••"
-                    className={errors.password ? "border-destructive pr-10" : "pr-10"}
-                  />
+                  <Button
+                    type="submit"
+                    variant="gold"
+                    className="w-full"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <span className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                        {isLogin ? "Signing In..." : "Creating Account..."}
+                      </span>
+                    ) : (
+                      isLogin ? "Sign In" : "Create Account"
+                    )}
+                  </Button>
+                </form>
+
+                <div className="mt-6 text-center">
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    onClick={() => {
+                      setIsLogin(!isLogin);
+                      setErrors({});
+                    }}
+                    className="text-sm text-muted-foreground hover:text-primary transition-colors font-sans"
                   >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {isLogin
+                      ? "Don't have an account? Sign up"
+                      : "Already have an account? Sign in"}
                   </button>
                 </div>
-                {errors.password && (
-                  <p className="text-destructive text-xs mt-1 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />
-                    {errors.password}
-                  </p>
-                )}
-              </div>
-
-              <Button
-                type="submit"
-                variant="gold"
-                className="w-full"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <span className="flex items-center gap-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
-                    {isLogin ? "Signing In..." : "Creating Account..."}
-                  </span>
-                ) : (
-                  isLogin ? "Sign In" : "Create Account"
-                )}
-              </Button>
-            </form>
-
-            <div className="mt-6 text-center">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsLogin(!isLogin);
-                  setErrors({});
-                }}
-                className="text-sm text-muted-foreground hover:text-primary transition-colors font-sans"
-              >
-                {isLogin
-                  ? "Don't have an account? Sign up"
-                  : "Already have an account? Sign in"}
-              </button>
-            </div>
+              </>
+            )}
           </div>
         </div>
       </main>
