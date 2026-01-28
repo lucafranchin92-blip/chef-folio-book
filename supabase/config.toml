@@ -2,3 +2,6 @@ project_id = "eihjidteadoqadnzhcsw"
 
 [functions.check-rate-limit]
 verify_jwt = false
+
+[functions.send-lockout-notification]
+verify_jwt = false

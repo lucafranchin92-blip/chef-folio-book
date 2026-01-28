@@ -12,6 +12,37 @@ const RATE_LIMITS = {
   password_reset: { maxAttempts: 3, windowMinutes: 60 },
 };
 
+// Send lockout notification email
+async function sendLockoutNotification(email: string, attemptType: string, lockoutMinutes: number) {
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error("Missing Supabase configuration for notification");
+      return;
+    }
+
+    const response = await fetch(`${supabaseUrl}/functions/v1/send-lockout-notification`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${supabaseAnonKey}`,
+      },
+      body: JSON.stringify({ email, attemptType, lockoutMinutes }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Failed to send lockout notification:", errorText);
+    } else {
+      console.log("Lockout notification sent successfully");
+    }
+  } catch (error) {
+    console.error("Error sending lockout notification:", error);
+  }
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
@@ -65,6 +96,9 @@ Deno.serve(async (req) => {
         identifier: identifier.toLowerCase(),
         attempt_type: attemptType,
       });
+    } else {
+      // Send lockout notification email (fire and forget)
+      sendLockoutNotification(identifier.toLowerCase(), attemptType, config.windowMinutes);
     }
 
     // Periodically clean up old records (1% chance per request)
