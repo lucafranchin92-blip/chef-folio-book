@@ -10,7 +10,7 @@ interface AuthContextType {
   loading: boolean;
   userRole: UserRole | null;
   signUp: (email: string, password: string, fullName?: string, role?: UserRole) => Promise<{ error: Error | null }>;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signIn: (email: string, password: string, rememberMe?: boolean) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -35,6 +35,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
+    // Check if this is a new browser session and user didn't want to be remembered
+    const shouldRemember = localStorage.getItem("rememberMe");
+    const sessionMarker = sessionStorage.getItem("authSessionActive");
+    
+    if (shouldRemember === "false" && !sessionMarker) {
+      // User didn't want to be remembered and this is a new browser session
+      supabase.auth.signOut();
+    }
+    
+    // Mark this browser session as active
+    sessionStorage.setItem("authSessionActive", "true");
+
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
@@ -99,7 +111,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error };
   };
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string, rememberMe: boolean = true) => {
+    // Store the remember me preference
+    localStorage.setItem("rememberMe", rememberMe.toString());
+    
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,

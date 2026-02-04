@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
@@ -43,6 +44,7 @@ const Auth = () => {
   const [selectedRole, setSelectedRole] = useState<UserRole>("buyer");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [errors, setErrors] = useState<{ email?: string; password?: string; fullName?: string }>({});
   
   const { signIn, signUp, user, loading } = useAuth();
@@ -102,7 +104,7 @@ const Auth = () => {
       }
 
       if (isLogin) {
-        const { error } = await signIn(email, password);
+        const { error } = await signIn(email, password, rememberMe);
         if (error) {
           if (error.message.includes("Invalid login credentials")) {
             toast({
@@ -317,6 +319,22 @@ const Auth = () => {
                       </p>
                     )}
                   </div>
+
+                  {isLogin && (
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="rememberMe"
+                        checked={rememberMe}
+                        onCheckedChange={(checked) => setRememberMe(checked === true)}
+                      />
+                      <Label
+                        htmlFor="rememberMe"
+                        className="text-sm font-normal text-muted-foreground cursor-pointer"
+                      >
+                        Remember me
+                      </Label>
+                    </div>
+                  )}
 
                   <Button
                     type="submit"
