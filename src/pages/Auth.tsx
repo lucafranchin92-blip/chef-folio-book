@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import ForgotPasswordForm from "@/components/ForgotPasswordForm";
+import GoogleSignInButton from "@/components/GoogleSignInButton";
 
 const checkRateLimit = async (email: string, attemptType: "login" | "signup"): Promise<{ allowed: boolean; retryAfter?: number }> => {
   try {
@@ -333,6 +334,17 @@ const Auth = () => {
                     )}
                   </Button>
                 </form>
+
+                <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-border" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
+                  </div>
+                </div>
+
+                <GoogleSignInButton isLogin={isLogin} />
 
                 <div className="mt-6 text-center">
                   <button
