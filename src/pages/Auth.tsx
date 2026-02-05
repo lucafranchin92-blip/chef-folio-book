@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { Eye, EyeOff, ChefHat, AlertCircle, User, UtensilsCrossed } from "lucide-react";
+import { Eye, EyeOff, ChefHat, AlertCircle, User, UtensilsCrossed, Mail } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +46,9 @@ const Auth = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [errors, setErrors] = useState<{ email?: string; password?: string; fullName?: string }>({});
+  const [showVerificationMessage, setShowVerificationMessage] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState("");
+  const [isResending, setIsResending] = useState(false);
   
   const { signIn, signUp, user, loading } = useAuth();
   const navigate = useNavigate();
@@ -53,6 +56,33 @@ const Auth = () => {
   const { toast } = useToast();
 
   const from = (location.state as { from?: Location })?.from?.pathname || "/";
+
+  const handleResendVerification = async () => {
+    if (!verificationEmail) return;
+    
+    setIsResending(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: verificationEmail,
+      });
+      
+      if (error) {
+        toast({
+          title: "Failed to Resend",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Email Sent",
+          description: "A new verification email has been sent. Please check your inbox.",
+        });
+      }
+    } finally {
+      setIsResending(false);
+    }
+  };
 
   useEffect(() => {
     if (!loading && user) {
@@ -153,10 +183,10 @@ const Auth = () => {
             title: "Account Created",
             description: "Please check your email to verify your account before signing in.",
           });
-          setEmail("");
+          setVerificationEmail(email);
+          setShowVerificationMessage(true);
           setPassword("");
           setFullName("");
-          setIsLogin(true);
         }
       }
     } finally {
@@ -192,16 +222,74 @@ const Auth = () => {
               <>
                 <div className="text-center mb-8">
                   <h1 className="font-serif text-2xl mb-2">
-                    {isLogin ? "Welcome Back" : "Create Account"}
+                    {showVerificationMessage ? "Check Your Email" : isLogin ? "Welcome Back" : "Create Account"}
                   </h1>
                   <p className="text-muted-foreground font-sans text-sm">
-                    {isLogin
+                    {showVerificationMessage
+                      ? "We've sent a verification link to your email"
+                      : isLogin
                       ? "Sign in to manage your reservations"
                       : "Join us to book private chef experiences"}
                   </p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
+                {showVerificationMessage ? (
+                  <div className="space-y-6">
+                    <div className="flex justify-center">
+                      <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+                        <Mail className="w-8 h-8 text-primary" />
+                      </div>
+                    </div>
+                    
+                    <div className="text-center space-y-2">
+                      <p className="text-sm text-muted-foreground">
+                        We sent a verification email to:
+                      </p>
+                      <p className="font-medium">{verificationEmail}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Click the link in the email to verify your account.
+                      </p>
+                    </div>
+
+                    <div className="space-y-3">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full"
+                        onClick={handleResendVerification}
+                        disabled={isResending}
+                      >
+                        {isResending ? (
+                          <span className="flex items-center gap-2">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                            Sending...
+                          </span>
+                        ) : (
+                          "Resend Verification Email"
+                        )}
+                      </Button>
+                      
+                      <Button
+                        type="button"
+                        variant="gold"
+                        className="w-full"
+                        onClick={() => {
+                          setShowVerificationMessage(false);
+                          setIsLogin(true);
+                          setEmail(verificationEmail);
+                        }}
+                      >
+                        Back to Sign In
+                      </Button>
+                    </div>
+
+                    <p className="text-xs text-center text-muted-foreground">
+                      Didn't receive the email? Check your spam folder or try resending.
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <form onSubmit={handleSubmit} className="space-y-4">
                   {!isLogin && (
                     <>
                       {/* Role Selection */}
@@ -388,6 +476,8 @@ const Auth = () => {
                       : "Already have an account? Sign in"}
                   </button>
                 </div>
+                  </>
+                )}
               </>
             )}
           </div>
