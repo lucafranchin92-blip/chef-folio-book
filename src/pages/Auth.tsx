@@ -112,6 +112,12 @@ const Auth = () => {
               description: "Invalid email or password. Please try again.",
               variant: "destructive",
             });
+          } else if (error.message.includes("Email not confirmed")) {
+            toast({
+              title: "Email Not Verified",
+              description: "Please check your email and click the verification link before signing in.",
+              variant: "destructive",
+            });
           } else {
             toast({
               title: "Login Failed",
@@ -145,8 +151,12 @@ const Auth = () => {
         } else {
           toast({
             title: "Account Created",
-            description: "Welcome! Your account has been created successfully.",
+            description: "Please check your email to verify your account before signing in.",
           });
+          setEmail("");
+          setPassword("");
+          setFullName("");
+          setIsLogin(true);
         }
       }
     } finally {
