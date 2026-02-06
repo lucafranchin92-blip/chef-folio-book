@@ -12,9 +12,83 @@ interface PasswordResetRequest {
   redirectUrl: string;
 }
 
+// IP-based rate limiting for the endpoint itself
+const IP_RATE_LIMIT = {
+  maxRequests: 5,
+  windowMinutes: 15,
+};
+
+// In-memory store for IP rate limiting
+const ipRequestCounts = new Map<string, { count: number; resetAt: number }>();
+
+function getClientIP(req: Request): string {
+  const forwardedFor = req.headers.get("x-forwarded-for");
+  if (forwardedFor) {
+    return forwardedFor.split(",")[0].trim();
+  }
+  const realIP = req.headers.get("x-real-ip");
+  if (realIP) {
+    return realIP;
+  }
+  return "unknown";
+}
+
+function checkIPRateLimit(ip: string): { allowed: boolean; retryAfter?: number } {
+  const now = Date.now();
+  const record = ipRequestCounts.get(ip);
+  
+  // Clean up expired records periodically
+  if (Math.random() < 0.1) {
+    for (const [key, value] of ipRequestCounts.entries()) {
+      if (now > value.resetAt) {
+        ipRequestCounts.delete(key);
+      }
+    }
+  }
+  
+  if (!record || now > record.resetAt) {
+    ipRequestCounts.set(ip, {
+      count: 1,
+      resetAt: now + IP_RATE_LIMIT.windowMinutes * 60 * 1000,
+    });
+    return { allowed: true };
+  }
+  
+  if (record.count >= IP_RATE_LIMIT.maxRequests) {
+    return {
+      allowed: false,
+      retryAfter: Math.ceil((record.resetAt - now) / 1000),
+    };
+  }
+  
+  record.count++;
+  return { allowed: true };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // IP-based rate limiting
+  const clientIP = getClientIP(req);
+  const ipCheck = checkIPRateLimit(clientIP);
+  
+  if (!ipCheck.allowed) {
+    return new Response(
+      JSON.stringify({ 
+        error: "Too many requests. Please try again later.",
+        retryAfter: ipCheck.retryAfter 
+      }),
+      { 
+        status: 429, 
+        headers: { 
+          ...corsHeaders, 
+          "Content-Type": "application/json",
+          "Retry-After": String(ipCheck.retryAfter || 60)
+        } 
+      }
+    );
   }
 
   try {
@@ -35,6 +109,40 @@ Deno.serve(async (req) => {
     if (!email) {
       return new Response(
         JSON.stringify({ error: "Email is required" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid email format" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Validate redirectUrl is from our domain
+    try {
+      const url = new URL(redirectUrl);
+      const allowedHosts = [
+        "localhost",
+        "lovable.app",
+        "lovableproject.com",
+        "chef-folio-book.lovable.app"
+      ];
+      const isAllowed = allowedHosts.some(host => 
+        url.hostname === host || url.hostname.endsWith(`.${host}`)
+      );
+      if (!isAllowed) {
+        return new Response(
+          JSON.stringify({ error: "Invalid redirect URL" }),
+          { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+    } catch {
+      return new Response(
+        JSON.stringify({ error: "Invalid redirect URL format" }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
@@ -71,7 +179,7 @@ Deno.serve(async (req) => {
     const resend = new Resend(resendApiKey);
     
     await resend.emails.send({
-      from: "Security <noreply@resend.dev>", // Use your verified domain in production
+      from: "Security <noreply@resend.dev>",
       to: [email],
       subject: "Reset Your Password",
       html: `
@@ -124,8 +232,6 @@ Deno.serve(async (req) => {
         </html>
       `,
     });
-
-    console.log("Password reset email sent successfully to:", email);
 
     return new Response(
       JSON.stringify({ success: true, message: "If an account exists, a reset email has been sent" }),

@@ -2,7 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 // Rate limit configuration
@@ -11,6 +11,61 @@ const RATE_LIMITS = {
   signup: { maxAttempts: 3, windowMinutes: 60 },
   password_reset: { maxAttempts: 3, windowMinutes: 60 },
 };
+
+// IP-based rate limiting for the endpoint itself
+const IP_RATE_LIMIT = {
+  maxRequests: 30,
+  windowMinutes: 1,
+};
+
+// In-memory store for IP rate limiting (resets on function cold start)
+const ipRequestCounts = new Map<string, { count: number; resetAt: number }>();
+
+function getClientIP(req: Request): string {
+  // Try various headers that might contain the real IP
+  const forwardedFor = req.headers.get("x-forwarded-for");
+  if (forwardedFor) {
+    return forwardedFor.split(",")[0].trim();
+  }
+  const realIP = req.headers.get("x-real-ip");
+  if (realIP) {
+    return realIP;
+  }
+  // Fallback - not ideal but better than nothing
+  return "unknown";
+}
+
+function checkIPRateLimit(ip: string): { allowed: boolean; retryAfter?: number } {
+  const now = Date.now();
+  const record = ipRequestCounts.get(ip);
+  
+  // Clean up expired records periodically
+  if (Math.random() < 0.1) {
+    for (const [key, value] of ipRequestCounts.entries()) {
+      if (now > value.resetAt) {
+        ipRequestCounts.delete(key);
+      }
+    }
+  }
+  
+  if (!record || now > record.resetAt) {
+    ipRequestCounts.set(ip, {
+      count: 1,
+      resetAt: now + IP_RATE_LIMIT.windowMinutes * 60 * 1000,
+    });
+    return { allowed: true };
+  }
+  
+  if (record.count >= IP_RATE_LIMIT.maxRequests) {
+    return {
+      allowed: false,
+      retryAfter: Math.ceil((record.resetAt - now) / 1000),
+    };
+  }
+  
+  record.count++;
+  return { allowed: true };
+}
 
 // Send lockout notification email
 async function sendLockoutNotification(email: string, attemptType: string, lockoutMinutes: number) {
@@ -35,8 +90,6 @@ async function sendLockoutNotification(email: string, attemptType: string, locko
     if (!response.ok) {
       const errorText = await response.text();
       console.error("Failed to send lockout notification:", errorText);
-    } else {
-      console.log("Lockout notification sent successfully");
     }
   } catch (error) {
     console.error("Error sending lockout notification:", error);
@@ -49,12 +102,42 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // IP-based rate limiting
+  const clientIP = getClientIP(req);
+  const ipCheck = checkIPRateLimit(clientIP);
+  
+  if (!ipCheck.allowed) {
+    return new Response(
+      JSON.stringify({ 
+        error: "Too many requests",
+        retryAfter: ipCheck.retryAfter 
+      }),
+      { 
+        status: 429, 
+        headers: { 
+          ...corsHeaders, 
+          "Content-Type": "application/json",
+          "Retry-After": String(ipCheck.retryAfter || 60)
+        } 
+      }
+    );
+  }
+
   try {
     const { identifier, attemptType = "login" } = await req.json();
 
     if (!identifier) {
       return new Response(
         JSON.stringify({ error: "Identifier is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Basic email format validation to prevent abuse
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(identifier)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid identifier format" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

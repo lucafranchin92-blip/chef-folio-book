@@ -174,7 +174,7 @@ export type Database = {
       }
       reviews: {
         Row: {
-          booking_id: string | null
+          booking_id: string
           buyer_id: string
           chef_id: string
           chef_reply: string | null
@@ -185,7 +185,7 @@ export type Database = {
           rating: number
         }
         Insert: {
-          booking_id?: string | null
+          booking_id: string
           buyer_id: string
           chef_id: string
           chef_reply?: string | null
@@ -196,7 +196,7 @@ export type Database = {
           rating: number
         }
         Update: {
-          booking_id?: string | null
+          booking_id?: string
           buyer_id?: string
           chef_id?: string
           chef_reply?: string | null
