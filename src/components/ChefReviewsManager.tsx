@@ -12,7 +12,6 @@ interface Review {
   rating: number;
   comment: string | null;
   created_at: string;
-  buyer_id: string;
   chef_reply: string | null;
   chef_reply_at: string | null;
 }
@@ -54,7 +53,7 @@ const ChefReviewsManager = ({ chefId }: ChefReviewsManagerProps) => {
     try {
       const { data, error } = await supabase
         .from("reviews")
-        .select("*")
+        .select("id, rating, comment, created_at, chef_reply, chef_reply_at")
         .eq("chef_id", chefId)
         .order("created_at", { ascending: false });
 
