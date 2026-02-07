@@ -239,9 +239,8 @@ Deno.serve(async (req) => {
     );
   } catch (error: unknown) {
     console.error("Error in password reset:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: "Unable to process request. Please try again later." }),
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }

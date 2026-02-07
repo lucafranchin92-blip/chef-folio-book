@@ -126,9 +126,26 @@ Deno.serve(async (req) => {
   try {
     const { identifier, attemptType = "login" } = await req.json();
 
-    if (!identifier) {
+    // Validate attemptType against allowed values
+    const validAttemptTypes = ["login", "signup", "password_reset"];
+    if (!validAttemptTypes.includes(attemptType)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid attempt type" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!identifier || typeof identifier !== "string") {
       return new Response(
         JSON.stringify({ error: "Identifier is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate identifier length (max 254 chars for email)
+    if (identifier.length > 254) {
+      return new Response(
+        JSON.stringify({ error: "Identifier too long" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
