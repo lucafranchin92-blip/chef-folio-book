@@ -94,14 +94,38 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
     if (!resendApiKey) {
-      throw new Error("RESEND_API_KEY is not configured");
+      console.error("RESEND_API_KEY is not configured");
+      return new Response(
+        JSON.stringify({ success: false, error: "Service configuration error" }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
 
     const resend = new Resend(resendApiKey);
     const { email, attemptType, lockoutMinutes }: LockoutNotificationRequest = await req.json();
 
     if (!email) {
-      throw new Error("Email is required");
+      return new Response(
+        JSON.stringify({ error: "Email is required" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Validate attemptType
+    const validAttemptTypes = ["login", "signup"];
+    if (!validAttemptTypes.includes(attemptType)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid attempt type" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Validate lockoutMinutes
+    if (typeof lockoutMinutes !== "number" || lockoutMinutes < 1 || lockoutMinutes > 1440) {
+      return new Response(
+        JSON.stringify({ error: "Invalid lockout duration" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
 
     // Validate email format
@@ -179,9 +203,8 @@ const handler = async (req: Request): Promise<Response> => {
     });
   } catch (error: unknown) {
     console.error("Error sending lockout notification:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return new Response(
-      JSON.stringify({ success: false, error: errorMessage }),
+      JSON.stringify({ success: false, error: "Unable to process request. Please try again later." }),
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }
