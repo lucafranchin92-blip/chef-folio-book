@@ -31,6 +31,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     if (data) {
       setUserRole(data.role as UserRole);
+    } else {
+      // No role found — try to assign from pending metadata
+      await ensureUserRole(userId);
     }
   };
 
@@ -79,6 +82,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
+  const ensureUserRole = async (userId: string) => {
+    // Check if user already has a role
+    const { data: existingRole } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .single();
+
+    if (existingRole) {
+      setUserRole(existingRole.role as UserRole);
+      return;
+    }
+
+    // No role yet — check user metadata for pending role from signup
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    const pendingRole = currentUser?.user_metadata?.pending_role as UserRole | undefined;
+
+    if (pendingRole) {
+      const { error: roleError } = await supabase
+        .from("user_roles")
+        .insert({ user_id: userId, role: pendingRole });
+
+      if (!roleError) {
+        setUserRole(pendingRole);
+      } else if (import.meta.env.DEV) {
+        console.error("Failed to assign deferred role:", roleError);
+      }
+    }
+  };
+
   const signUp = async (email: string, password: string, fullName?: string, role: UserRole = "buyer") => {
     const redirectUrl = `${window.location.origin}/`;
     
@@ -89,21 +122,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         emailRedirectTo: redirectUrl,
         data: {
           full_name: fullName,
+          pending_role: role,
         },
       },
     });
     
-    // If signup successful, create user role
-    if (!error && data.user) {
+    // Try to assign role immediately (works if session is active)
+    if (!error && data.user && data.session) {
       const { error: roleError } = await supabase
         .from("user_roles")
         .insert({ user_id: data.user.id, role });
       
-      if (roleError) {
-        if (import.meta.env.DEV) {
-          console.error("Failed to assign role:", roleError);
-        }
-      } else {
+      if (!roleError) {
         setUserRole(role);
       }
     }
